@@ -11,13 +11,13 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as IndexImport } from './routes/index'
+import { Route as CanvasesCanvasIdImport } from './routes/canvases/$canvasId'
 
 // Create/Update Routes
 
-const IndexRoute = IndexImport.update({
-  id: '/',
-  path: '/',
+const CanvasesCanvasIdRoute = CanvasesCanvasIdImport.update({
+  id: '/canvases/$canvasId',
+  path: '/canvases/$canvasId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -25,11 +25,11 @@ const IndexRoute = IndexImport.update({
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
+    '/canvases/$canvasId': {
+      id: '/canvases/$canvasId'
+      path: '/canvases/$canvasId'
+      fullPath: '/canvases/$canvasId'
+      preLoaderRoute: typeof CanvasesCanvasIdImport
       parentRoute: typeof rootRoute
     }
   }
@@ -38,33 +38,33 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/canvases/$canvasId': typeof CanvasesCanvasIdRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/canvases/$canvasId': typeof CanvasesCanvasIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/': typeof IndexRoute
+  '/canvases/$canvasId': typeof CanvasesCanvasIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/canvases/$canvasId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/canvases/$canvasId'
+  id: '__root__' | '/canvases/$canvasId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  CanvasesCanvasIdRoute: typeof CanvasesCanvasIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  CanvasesCanvasIdRoute: CanvasesCanvasIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -77,11 +77,11 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/"
+        "/canvases/$canvasId"
       ]
     },
-    "/": {
-      "filePath": "index.tsx"
+    "/canvases/$canvasId": {
+      "filePath": "canvases/$canvasId.tsx"
     }
   }
 }

@@ -1,0 +1,212 @@
+import { useNavigate } from '@tanstack/react-router';
+import { useCanvasContext } from '@/context/CanvasContext';
+import { useState } from 'react';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuItem,
+    SidebarMenuAction,
+    SidebarMenuButton,
+} from '@/components/ui/sidebar';
+import {
+    DropdownMenu,
+    DropdownMenuItem,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { MoreHorizontal, Edit, DeleteIcon } from 'lucide-react';
+import { type Canvas } from '@/types/canvas';
+import CreateCanvasForm from '@/components/Canvas/CreateCanvasForm';
+
+export default function CanvasSidebar() {
+    const { canvases, currentCanvas, setCurrentCanvas, createCanvas, updateCanvas, deleteCanvas } = useCanvasContext();
+    const navigate = useNavigate();
+    const [canvasToEdit, setCanvasToEdit] = useState<Canvas | null>(null);
+    const [canvasToDelete, setCanvasToDelete] = useState<Canvas | null>(null);
+    const [newCanvasName, setNewCanvasName] = useState('');
+    const [newCanvasUrl, setNewCanvasUrl] = useState('');
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+    const handleCanvasSelect = (canvas: Canvas) => {
+        setCurrentCanvas(canvas);
+        navigate({ to: `/canvases/${canvas.canvasId}` });
+    };
+
+    const handleEditClick = (canvas: Canvas) => {
+        setCanvasToEdit(canvas);
+        setNewCanvasName(canvas.problemName);
+        setNewCanvasUrl(canvas.problemUrl ?? '');
+        setEditDialogOpen(true);
+    };
+
+    const handleDeleteClick = (canvas: Canvas) => {
+        setCanvasToDelete(canvas);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleEditSubmit = () => {
+        if (canvasToEdit && newCanvasName.trim()) {
+            updateCanvas(
+                canvasToEdit.canvasId,
+                {
+                    problemName: newCanvasName.trim(),
+                    problemUrl: newCanvasUrl.trim(),
+                }
+            );
+            setEditDialogOpen(false);
+            setCanvasToEdit(null);
+            setNewCanvasName('');
+        }
+    };
+
+    const handleDeleteSubmit = () => {
+        if (canvasToDelete) {
+            deleteCanvas(canvasToDelete.canvasId);
+
+            // If we're deleting the current canvas, navigate to the first available canvas or home
+            if (currentCanvas?.canvasId === canvasToDelete.canvasId) {
+                const remainingCanvases = canvases.filter(c => c.canvasId !== canvasToDelete.canvasId);
+                if (remainingCanvases.length > 0) {
+                    handleCanvasSelect(remainingCanvases[0]);
+                } else {
+                    createCanvas({
+                        problemName: 'New Canvas',
+                        problemUrl: ''
+                    }).then(newCanvas => {
+                        setCurrentCanvas(newCanvas);
+                        navigate({ to: `/canvases/${newCanvas.canvasId}` });
+                    });
+                }
+            }
+
+            setDeleteDialogOpen(false);
+            setCanvasToDelete(null);
+        }
+    };
+
+    return (
+        <>
+            <Sidebar>
+                <SidebarHeader className="flex-row border justify-between items-center">
+                    <span>Canvases ({canvases.length})</span>
+                    <CreateCanvasForm />
+                </SidebarHeader>
+                <SidebarContent>
+                    <SidebarMenu>
+                        {canvases.map((canvas, index) => (
+                            <SidebarMenuItem key={index}>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={currentCanvas?.canvasId === canvas.canvasId}
+                                >
+                                    <a
+                                        href="#"
+                                        onClick={() => handleCanvasSelect(canvas)}
+                                    >
+                                        <span>{canvas.problemName}</span>
+                                    </a>
+                                </SidebarMenuButton>
+                                <SidebarMenuAction>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger>
+                                            <SidebarMenuButton>
+                                                <MoreHorizontal />
+                                            </SidebarMenuButton>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuItem onClick={() => handleEditClick(canvas)}>
+                                                <Edit className="mr-2" />
+                                                Rename
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDeleteClick(canvas)}>
+                                                <DeleteIcon className="mr-2" />
+                                                Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </SidebarMenuAction>
+                            </SidebarMenuItem>
+                        ))}
+                    </SidebarMenu>
+                </SidebarContent>
+            </Sidebar>
+
+            {/* Edit Dialog */}
+            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Canvas</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Label htmlFor="problemName">Problem Name</Label>
+                        <Input
+                            id="problemName"
+                            value={newCanvasName}
+                            onChange={(e) => setNewCanvasName(e.target.value)}
+                            autoFocus
+                        />
+                    </div>
+                    <div className="py-4">
+                        <Label htmlFor="problemUrl">Problem URL</Label>
+                        <Input
+                            id="problemUrl"
+                            value={newCanvasUrl}
+                            onChange={(e) => setNewCanvasUrl(e.target.value)}
+                            autoFocus
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleEditSubmit}>Save</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Dialog */}
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Canvas</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete "{canvasToDelete?.problemName}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteSubmit}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
+    );
+}
