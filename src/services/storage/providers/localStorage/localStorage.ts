@@ -13,7 +13,7 @@ import {
   type Idea, 
   type CreateIdea, 
   type UpdateIdea, 
-  emptyCanvas,
+  createEmptyCanvas,
   emptyIdea
 } from '@/types/canvas'
 import { STORAGE_KEYS } from './constants'
@@ -138,11 +138,18 @@ private async initializeLastEdited(): Promise<void> {
     await this.ensureInitialized()
     try {
       const newCanvas: Canvas = {
-        ...emptyCanvas,
+        ...createEmptyCanvas(),
         ...data,
+        canvasId: data.canvasId ?? createEmptyCanvas().canvasId,
       }
 
       const canvases = await this.getCanvases() || []
+      
+      // Check if the canvas ID already exists
+      if (canvases.some(c => c.canvasId === newCanvas.canvasId)) {
+        throw new StorageOperationError('create', 'canvas', undefined, new Error('Canvas ID already exists'));
+      }
+
       await this.setData(STORAGE_KEYS.CANVAS_DATA, [...canvases, newCanvas])
       await this.setLastEditedCanvasId(newCanvas.canvasId)
       return newCanvas
@@ -158,13 +165,24 @@ private async initializeLastEdited(): Promise<void> {
     const canvases = await this.getCanvases()
     if (!canvases) throw new StorageOperationError('read', 'canvases')
   
+    // Add a small delay to ensure the new timestamp is greater
+    await new Promise(resolve => setTimeout(resolve, 1))
+  
     const updatedCanvases = canvases.map(c => 
-      c.canvasId === id ? { ...c, ...updates, updatedAt: new Date() } : c
+      c.canvasId === id ? { 
+        ...c, 
+        ...updates, 
+        updatedAt: new Date(),
+        // Preserve existing fields if not provided in updates
+        constraints: updates.constraints ?? c.constraints,
+        code: updates.code ?? c.code,
+        testCases: updates.testCases ?? c.testCases,
+      } : c
     )
 
     await this.setData(STORAGE_KEYS.CANVAS_DATA, updatedCanvases)
     await this.setLastEditedCanvasId(id)
-}
+  }
 
   async deleteCanvas(id: string): Promise<void> {
     await this.ensureInitialized()

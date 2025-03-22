@@ -30,10 +30,10 @@ export default function Canvas() {
     // Initialize state when canvas data loads
     useEffect(() => {
         if (canvas) {
-            setConstraints(canvas.constraints);
-            setTestCases(canvas.testCases);
-            setCode(canvas.code);
-            setIdeas(canvas.ideas);
+            setConstraints(canvas.constraints ?? '');
+            setTestCases(canvas.testCases ?? '');
+            setCode(canvas.code ?? '');
+            setIdeas(canvas.ideas ?? []);
         }
     }, [canvas]);
 

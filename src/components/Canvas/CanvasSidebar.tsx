@@ -39,6 +39,7 @@ import { Label } from '@/components/ui/label';
 import { MoreHorizontal, Edit, DeleteIcon } from 'lucide-react';
 import { type Canvas } from '@/types/canvas';
 import CreateCanvasForm from '@/components/Canvas/CreateCanvasForm';
+import { toast } from 'sonner';
 
 export default function CanvasSidebar() {
     const { canvases, currentCanvas, setCurrentCanvas, createCanvas, updateCanvas, deleteCanvas } = useCanvasContext();
@@ -67,43 +68,87 @@ export default function CanvasSidebar() {
         setDeleteDialogOpen(true);
     };
 
-    const handleEditSubmit = () => {
+    const handleEditSubmit = async () => {
         if (canvasToEdit && newCanvasName.trim()) {
-            updateCanvas(
-                canvasToEdit.canvasId,
-                {
-                    problemName: newCanvasName.trim(),
-                    problemUrl: newCanvasUrl.trim(),
-                }
-            );
-            setEditDialogOpen(false);
-            setCanvasToEdit(null);
-            setNewCanvasName('');
+            try {
+                await updateCanvas(
+                    canvasToEdit.canvasId,
+                    {
+                        problemName: newCanvasName.trim(),
+                        problemUrl: newCanvasUrl.trim(),
+                    }
+                );
+                toast.success("Canvas updated", {
+                    description: `"${newCanvasName.trim()}" has been updated successfully`,
+                });
+                setEditDialogOpen(false);
+                setCanvasToEdit(null);
+                setNewCanvasName('');
+            } catch (error) {
+                toast.error("Failed to update canvas", {
+                    description: "Please try again",
+                });
+            }
         }
     };
 
-    const handleDeleteSubmit = () => {
+    const handleDeleteSubmit = async () => {
         if (canvasToDelete) {
-            deleteCanvas(canvasToDelete.canvasId);
+            const canvasName = canvasToDelete.problemName;
+            const canvasId = canvasToDelete.canvasId;
+            const canvasUrl = canvasToDelete.problemUrl;
 
-            // If we're deleting the current canvas, navigate to the first available canvas or home
-            if (currentCanvas?.canvasId === canvasToDelete.canvasId) {
-                const remainingCanvases = canvases.filter(c => c.canvasId !== canvasToDelete.canvasId);
-                if (remainingCanvases.length > 0) {
-                    handleCanvasSelect(remainingCanvases[0]);
-                } else {
-                    createCanvas({
-                        problemName: 'New Canvas',
-                        problemUrl: ''
-                    }).then(newCanvas => {
+            try {
+                await deleteCanvas(canvasId);
+
+                // Only proceed with UI updates and navigation after successful deletion
+                if (currentCanvas?.canvasId === canvasId) {
+                    const remainingCanvases = canvases.filter(c => c.canvasId !== canvasId);
+                    if (remainingCanvases.length > 0) {
+                        handleCanvasSelect(remainingCanvases[0]);
+                    } else {
+                        const newCanvas = await createCanvas({
+                            problemName: 'New Canvas',
+                            problemUrl: ''
+                        });
                         setCurrentCanvas(newCanvas);
                         navigate({ to: `/canvases/${newCanvas.canvasId}` });
-                    });
+                    }
                 }
-            }
 
-            setDeleteDialogOpen(false);
-            setCanvasToDelete(null);
+                toast.success("Canvas deleted", {
+                    description: `"${canvasName}" has been deleted`,
+                    action: {
+                        label: "Undo",
+                        onClick: async () => {
+                            try {
+                                // Create a new canvas with the same ID
+                                const restoredCanvas = await createCanvas({
+                                    problemName: canvasName,
+                                    problemUrl: canvasUrl ?? '',
+                                    canvasId // Use the original ID
+                                });
+                                setCurrentCanvas(restoredCanvas);
+                                navigate({ to: `/canvases/${restoredCanvas.canvasId}` });
+                                toast.success("Canvas restored", {
+                                    description: `"${canvasName}" has been restored`,
+                                });
+                            } catch (error) {
+                                toast.error("Failed to restore canvas", {
+                                    description: "Please try again",
+                                });
+                            }
+                        },
+                    },
+                });
+
+                setDeleteDialogOpen(false);
+                setCanvasToDelete(null);
+            } catch (error) {
+                toast.error("Failed to delete canvas", {
+                    description: "Please try again",
+                });
+            }
         }
     };
 
@@ -123,7 +168,7 @@ export default function CanvasSidebar() {
                                     isActive={currentCanvas?.canvasId === canvas.canvasId}
                                 >
                                     <a
-                                        href="#"
+                                        href={`/canvases/${canvas.canvasId}`}
                                         onClick={() => handleCanvasSelect(canvas)}
                                     >
                                         <span>{canvas.problemName}</span>
@@ -139,7 +184,7 @@ export default function CanvasSidebar() {
                                         <DropdownMenuContent>
                                             <DropdownMenuItem onClick={() => handleEditClick(canvas)}>
                                                 <Edit className="mr-2" />
-                                                Rename
+                                                Edit
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => handleDeleteClick(canvas)}>
                                                 <DeleteIcon className="mr-2" />

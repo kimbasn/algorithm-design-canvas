@@ -7,6 +7,7 @@ import CanvasSidebar from '@/components/Canvas/CanvasSidebar'
 import { CanvasProvider, useCanvasContext } from '@/context/CanvasContext'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
 
 export const Route = createRootRoute({
   component: () => (
@@ -15,6 +16,7 @@ export const Route = createRootRoute({
         <SidebarProvider>
           <Root />
           <TanStackRouterDevtools />
+          <Toaster />
         </SidebarProvider>
       </CanvasProvider>
     </ThemeProvider>

@@ -30,6 +30,7 @@ export const createCanvasSchema = z.object({
     message: "Problem Name must be at least 2 characters.",
   }),
   problemUrl: z.string().url({ message: "Invalid url" }).optional(),
+  canvasId: z.string().uuid().optional(),
 });
 
 export const canvasSchema = createCanvasSchema.extend({
@@ -55,7 +56,7 @@ export type UpdateCanvas = z.infer<typeof updateCanvasSchema>;
 
 
 // Empty canvas object for initialization
-export const emptyCanvas: Canvas = {
+export const createEmptyCanvas = (): Canvas => ({
   canvasId: uuidv4(),
   problemName: '',
   problemUrl: '',
@@ -65,4 +66,4 @@ export const emptyCanvas: Canvas = {
   code: '',
   createdAt: new Date(),
   updatedAt: new Date(),
-};
+});

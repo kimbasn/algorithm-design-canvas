@@ -10,7 +10,6 @@ export function useCanvas(canvasId: string) {
 
   useEffect(() => {
     if (!canvasId) {
-      console.log('No canvasId provided');
       setError('No canvas ID provided');
       setLoading(false);
       return;
@@ -20,9 +19,7 @@ export function useCanvas(canvasId: string) {
       try {
         setLoading(true);
         setError(null);
-        console.log('Fetching canvas with ID:', canvasId);
-        const foundCanvas = getCanvas(canvasId);
-        console.log('Found canvas:', foundCanvas);
+        const foundCanvas = await getCanvas(canvasId);
         
         if (!foundCanvas) {
           setError(`Canvas with ID ${canvasId} not found`);
