@@ -1,6 +1,9 @@
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
+
+
+
 import { initializeStorage } from '@/services/storage'
 import { StorageType } from '@/types/storage'
 import { StorageInitializationError } from '@/errors'

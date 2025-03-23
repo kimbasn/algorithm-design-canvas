@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, createRootRoute, useNavigate } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { Analytics } from '@vercel/analytics/react';
 
 import Header from '../components/Canvas/Header'
 import CanvasSidebar from '@/components/Canvas/CanvasSidebar'
@@ -17,6 +18,7 @@ export const Route = createRootRoute({
           <Root />
           <TanStackRouterDevtools />
           <Toaster />
+          <Analytics />
         </SidebarProvider>
       </CanvasProvider>
     </ThemeProvider>
