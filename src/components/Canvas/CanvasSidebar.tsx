@@ -8,7 +8,6 @@ import {
     SidebarMenu,
     SidebarMenuItem,
     SidebarMenuAction,
-    SidebarMenuButton,
 } from '@/components/ui/sidebar';
 import {
     DropdownMenu,
@@ -40,6 +39,7 @@ import { MoreHorizontal, Edit, DeleteIcon } from 'lucide-react';
 import { type Canvas } from '@/types/canvas';
 import CreateCanvasForm from '@/components/Canvas/CreateCanvasForm';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export default function CanvasSidebar() {
     const { canvases, currentCanvas, setCurrentCanvas, createCanvas, updateCanvas, deleteCanvas } = useCanvasContext();
@@ -154,40 +154,64 @@ export default function CanvasSidebar() {
 
     return (
         <>
-            <Sidebar>
-                <SidebarHeader className="flex-row border justify-between items-center">
-                    <span>Canvases ({canvases.length})</span>
-                    <CreateCanvasForm />
+            <Sidebar className={cn(
+                "w-[260px] flex flex-col",
+                "bg-white dark:bg-gray-900",
+                "border-r border-gray-200 dark:border-gray-700"
+            )}>
+                <SidebarHeader className={cn(
+                    "p-3.5 border-b border-gray-200 dark:border-gray-700",
+                    "flex items-center"
+                )}>
+                    <div className="flex items-center">
+                        <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            Algorithm Design Canvas
+                        </span>
+                    </div>
                 </SidebarHeader>
-                <SidebarContent>
+
+                <div className="p-5">
+                    <CreateCanvasForm />
+                </div>
+
+                <SidebarContent className="flex-1 overflow-y-auto">
                     <SidebarMenu>
                         {canvases.map((canvas, index) => (
-                            <SidebarMenuItem key={index}>
-                                <SidebarMenuButton
-                                    asChild
-                                    isActive={currentCanvas?.canvasId === canvas.canvasId}
-                                >
-                                    <a
-                                        href={`/canvases/${canvas.canvasId}`}
-                                        onClick={() => handleCanvasSelect(canvas)}
-                                    >
-                                        <span>{canvas.problemName}</span>
-                                    </a>
-                                </SidebarMenuButton>
+                            <SidebarMenuItem
+                                key={index}
+                                className={cn(
+                                    "px-5 py-3 flex items-center border-l-3 transition-all cursor-pointer",
+                                    currentCanvas?.canvasId === canvas.canvasId
+                                        ? "bg-gray-100 dark:bg-gray-800 border-l-blue-500"
+                                        : "border-l-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                )}
+                            >
+                                <div className="flex-1 min-w-0">
+                                    <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                                        {canvas.problemName}
+                                    </div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                        Updated {new Date(canvas.updatedAt).toLocaleDateString()}
+                                    </div>
+                                </div>
                                 <SidebarMenuAction>
                                     <DropdownMenu>
-                                        <DropdownMenuTrigger>
-                                            <SidebarMenuButton>
-                                                <MoreHorizontal />
-                                            </SidebarMenuButton>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            >
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
+                                        <DropdownMenuContent align="end">
                                             <DropdownMenuItem onClick={() => handleEditClick(canvas)}>
-                                                <Edit className="mr-2" />
+                                                <Edit className="mr-2 h-4 w-4" />
                                                 Edit
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => handleDeleteClick(canvas)}>
-                                                <DeleteIcon className="mr-2" />
+                                                <DeleteIcon className="mr-2 h-4 w-4" />
                                                 Delete
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -197,6 +221,13 @@ export default function CanvasSidebar() {
                         ))}
                     </SidebarMenu>
                 </SidebarContent>
+
+                <div className={cn(
+                    "p-3 border-t border-gray-200 dark:border-gray-700",
+                    "flex items-center"
+                )}>
+                    Total Canvas: {canvases.length}
+                </div>
             </Sidebar>
 
             {/* Edit Dialog */}
