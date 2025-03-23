@@ -8,7 +8,6 @@ export const Route = createFileRoute('/canvases/$canvasId')({
 })
 
 function RouteComponent() {
-  const { canvasId } = Route.useParams()
 
   return (
     <Canvas />

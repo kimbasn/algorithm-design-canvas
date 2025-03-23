@@ -26,13 +26,11 @@ import { toast } from 'sonner';
 import { useCanvasContext } from '@/context/CanvasContext';
 
 import { canvasSchema } from '@/types/canvas';
-import { useNavigate } from '@tanstack/react-router';
 
 export default function CreateCanvasForm() {
     const [open, setOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const { setCurrentCanvas, createCanvas } = useCanvasContext();
-    const navigate = useNavigate();
 
     const form = useForm<z.infer<typeof canvasSchema>>({
         resolver: zodResolver(canvasSchema),
