@@ -153,15 +153,16 @@ export default function CanvasSidebar() {
     };
 
     return (
-        <>
+        <div>
             <Sidebar className={cn(
                 "w-[260px] flex flex-col",
-                "bg-white dark:bg-gray-900",
+                "bg-white dark:bg-[#1f2937]",
                 "border-r border-gray-200 dark:border-gray-700"
             )}>
                 <SidebarHeader className={cn(
                     "p-3.5 border-b border-gray-200 dark:border-gray-700",
-                    "flex items-center"
+                    "flex items-center",
+                    "bg-gray-50/50 dark:bg-[#1f2937]/50"
                 )}>
                     <div className="flex items-center">
                         <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -182,9 +183,10 @@ export default function CanvasSidebar() {
                                 className={cn(
                                     "px-5 py-3 flex items-center border-l-3 transition-all cursor-pointer",
                                     currentCanvas?.canvasId === canvas.canvasId
-                                        ? "bg-gray-100 dark:bg-gray-800 border-l-blue-500"
-                                        : "border-l-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                        ? "bg-gray-100 dark:bg-[#1f2937] border-l-blue-500"
+                                        : "border-l-transparent hover:bg-gray-50 dark:hover:bg-[#1f2937]/50"
                                 )}
+                                onClick={() => handleCanvasSelect(canvas)}
                             >
                                 <div className="flex-1 min-w-0">
                                     <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
@@ -200,7 +202,7 @@ export default function CanvasSidebar() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-[#1f2937]/50"
                                             >
                                                 <MoreHorizontal className="h-4 w-4" />
                                             </Button>
@@ -224,7 +226,9 @@ export default function CanvasSidebar() {
 
                 <div className={cn(
                     "p-3 border-t border-gray-200 dark:border-gray-700",
-                    "flex items-center"
+                    "flex items-center",
+                    "bg-gray-50/50 dark:bg-[#1f2937]/50",
+                    "text-gray-900 dark:text-gray-100"
                 )}>
                     Total Canvas: {canvases.length}
                 </div>
@@ -283,6 +287,6 @@ export default function CanvasSidebar() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </>
+        </div>
     );
 }

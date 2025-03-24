@@ -7,7 +7,7 @@ import Header from '../components/Canvas/Header'
 import CanvasSidebar from '@/components/Canvas/CanvasSidebar'
 import { CanvasProvider, useCanvasContext } from '@/context/CanvasContext'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { ThemeProvider } from '@/components/theme-provider'
+import { ThemeProvider, useTheme } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 
 export const Route = createRootRoute({
@@ -26,10 +26,10 @@ export const Route = createRootRoute({
   ),
 })
 
-
 function Root() {
   const { canvases, createCanvas, getLastEditedCanvas, loading } = useCanvasContext();
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const initializeCanvas = async () => {
@@ -57,14 +57,30 @@ function Root() {
     initializeCanvas();
   }, [canvases, createCanvas, getLastEditedCanvas, navigate, loading]);
 
+  useEffect(() => {
+    const root = window.document.documentElement
+    root.classList.remove("light", "dark")
+
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches ? "dark" : "light"
+      root.classList.add(systemTheme)
+      return
+    }
+
+    root.classList.add(theme)
+  }, [theme])
+
   return (
-    <>
+    <div className="flex h-screen w-screen overflow-hidden">
       <CanvasSidebar />
-      <SidebarInset>
+      <SidebarInset className="flex flex-col flex-1 overflow-hidden">
         <Header />
-        <Outlet />
+        <div className="flex-1 overflow-hidden">
+          <Outlet />
+        </div>
       </SidebarInset>
-    </>
+    </div>
   )
 }
 
