@@ -1,10 +1,13 @@
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import { useCanvasContext } from '@/context/CanvasContext'
 import { ModeToggle } from '@/components/mode-toggle'
 import { Button } from '../ui/button'
 import { Pause, RotateCcw, Play } from "lucide-react"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
+
+import { useCanvasContext } from '@/context/CanvasContext'
+import { ExportCanvas } from './ExportCanvas'
+import { ImportCanvas } from '@/components/Canvas/ImportCanvas';
 
 const Header = () => {
   const { currentCanvas } = useCanvasContext()
@@ -93,9 +96,8 @@ const Header = () => {
         <Button className='bg-slate-700 text-white border-2 cursor-pointer' disabled>
           <i className="fas fa-share-alt mr-2"></i> Share
         </Button>
-        <Button className="bg-blue-500 text-white border-2 cursor-pointer">
-          <i className="fas fa-save mr-2"></i> Export
-        </Button>
+        <ImportCanvas />
+        <ExportCanvas />
       </div>
     </header>
   )

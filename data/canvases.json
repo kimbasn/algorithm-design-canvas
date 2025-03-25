@@ -1,0 +1,216 @@
+[
+  {
+    "canvasId": "14cd6ff0-66a8-4494-a130-3d42f5108938",
+    "problemName": "Two Sum",
+    "problemUrl": "https://leetcode.com/problems/two-sum/",
+    "constraints": "Array of integers, target sum",
+    "ideas": [
+      {
+        "ideaId": "1",
+        "description": "Brute force",
+        "timeComplexity": "O(n^2)",
+        "spaceComplexity": "O(1)"
+      },
+      {
+        "ideaId": "2",
+        "description": "Hash map",
+        "timeComplexity": "O(n)",
+        "spaceComplexity": "O(n)"
+      }
+    ],
+    "testCases": "Input: [2, 7, 11, 15], target = 9; Output: [0, 1]",
+    "code": "function twoSum(nums, target) { /* implementation */ }",
+    "createdAt": "2025-03-17T10:00:00.000Z",
+    "updatedAt": "2025-03-17T10:00:00.000Z",
+    "language": "python"
+  },
+  {
+    "canvasId": "080d0005-79d8-4e72-a0a5-ed8f42410a52",
+    "problemName": "Reverse Linked List",
+    "problemUrl": "https://leetcode.com/problems/reverse-linked-list/",
+    "constraints": "Singly linked list",
+    "ideas": [
+      {
+        "ideaId": "1",
+        "description": "Iterative",
+        "timeComplexity": "O(n)",
+        "spaceComplexity": "O(1)"
+      },
+      {
+        "ideaId": "2",
+        "description": "Recursive",
+        "timeComplexity": "O(n)",
+        "spaceComplexity": "O(n)"
+      }
+    ],
+    "testCases": "Input: [1, 2, 3, 4, 5]; Output: [5, 4, 3, 2, 1]",
+    "code": "function reverseList(head) { /* implementation */ }",
+    "createdAt": "2025-03-17T10:05:00.000Z",
+    "updatedAt": "2025-03-17T10:05:00.000Z",
+    "language": "python"
+  },
+  {
+    "canvasId": "26b56897-27e2-414c-b0ed-b12707818c89",
+    "problemName": "Valid Parentheses",
+    "problemUrl": "https://leetcode.com/problems/valid-parentheses/",
+    "constraints": "String containing '(', ')', '{', '}', '[' and ']'",
+    "ideas": [
+      {
+        "ideaId": "1",
+        "description": "Stack",
+        "timeComplexity": "O(n)",
+        "spaceComplexity": "O(n)"
+      }
+    ],
+    "testCases": "Input: '()[]{}'; Output: true",
+    "code": "function isValid(s) { /* implementation */ }",
+    "createdAt": "2025-03-17T10:10:00.000Z",
+    "updatedAt": "2025-03-17T10:10:00.000Z",
+    "language": "python"
+  },
+  {
+    "canvasId": "5cf00210-d776-4b5f-8188-99c85fadcc94",
+    "problemName": "Merge Two Sorted Lists",
+    "problemUrl": "https://leetcode.com/problems/merge-two-sorted-lists/",
+    "constraints": "Two sorted linked lists",
+    "ideas": [
+      {
+        "ideaId": "1",
+        "description": "Iterative",
+        "timeComplexity": "O(n + m)",
+        "spaceComplexity": "O(1)"
+      },
+      {
+        "ideaId": "2",
+        "description": "Recursive",
+        "timeComplexity": "O(n + m)",
+        "spaceComplexity": "O(n + m)"
+      }
+    ],
+    "testCases": "Input: [1, 2, 4], [1, 3, 4]; Output: [1, 1, 2, 3, 4, 4]",
+    "code": "function mergeTwoLists(l1, l2) { /* implementation */ }",
+    "createdAt": "2025-03-17T10:15:00.000Z",
+    "updatedAt": "2025-03-17T10:15:00.000Z",
+    "language": "python"
+  },
+  {
+    "canvasId": "5de5321c-d3f8-4987-b9ff-716130ef6daf",
+    "problemName": "Best Time to Buy and Sell Stock",
+    "problemUrl": "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/",
+    "constraints": "Array of stock prices",
+    "ideas": [
+      {
+        "ideaId": "1",
+        "description": "One pass",
+        "timeComplexity": "O(n)",
+        "spaceComplexity": "O(1)"
+      }
+    ],
+    "testCases": "Input: [7, 1, 5, 3, 6, 4]; Output: 5",
+    "code": "function maxProfit(prices) { /* implementation */ }",
+    "createdAt": "2025-03-17T10:20:00.000Z",
+    "updatedAt": "2025-03-17T10:20:00.000Z",
+    "language": "python"
+  },
+  {
+    "canvasId": "59ad602c-7349-4f8a-aad9-7f346a6a1f98",
+    "problemName": "Maximum Subarray",
+    "problemUrl": "https://leetcode.com/problems/maximum-subarray/",
+    "constraints": "Array of integers",
+    "ideas": [
+      {
+        "ideaId": "1",
+        "description": "Kadane's Algorithm",
+        "timeComplexity": "O(n)",
+        "spaceComplexity": "O(1)"
+      }
+    ],
+    "testCases": "Input: [-2,1,-3,4,-1,2,1,-5,4]; Output: 6",
+    "code": "function maxSubArray(nums) { /* implementation */ }",
+    "createdAt": "2025-03-17T10:25:00.000Z",
+    "updatedAt": "2025-03-17T10:25:00.000Z",
+    "language": "python"
+  },
+  {
+    "canvasId": "38558f12-3df7-40da-b01d-93d2459c1d69",
+    "problemName": "Climbing Stairs",
+    "problemUrl": "https://leetcode.com/problems/climbing-stairs/",
+    "constraints": "Positive integer n",
+    "ideas": [
+      {
+        "ideaId": "1",
+        "description": "Dynamic Programming",
+        "timeComplexity": "O(n)",
+        "spaceComplexity": "O(1)"
+      }
+    ],
+    "testCases": "Input: 3; Output: 3",
+    "code": "function climbStairs(n) { /* implementation */ }",
+    "createdAt": "2025-03-17T10:30:00.000Z",
+    "updatedAt": "2025-03-17T10:30:00.000Z",
+    "language": "python"
+  },
+  {
+    "canvasId": "966a20a6-fc70-43a0-9b80-514c2886e95d",
+    "problemName": "Longest Palindromic Substring",
+    "problemUrl": "https://leetcode.com/problems/longest-palindromic-substring/",
+    "constraints": "String s",
+    "ideas": [
+      {
+        "ideaId": "1",
+        "description": "Expand Around Center",
+        "timeComplexity": "O(n^2)",
+        "spaceComplexity": "O(1)"
+      },
+      {
+        "ideaId": "2",
+        "description": "Dynamic Programming",
+        "timeComplexity": "O(n^2)",
+        "spaceComplexity": "O(n^2)"
+      }
+    ],
+    "testCases": "Input: 'babad'; Output: 'bab'",
+    "code": "function longestPalindrome(s) { /* implementation */ }",
+    "createdAt": "2025-03-17T10:35:00.000Z",
+    "updatedAt": "2025-03-17T10:35:00.000Z",
+    "language": "python"
+  },
+  {
+    "canvasId": "6420b92a-44c8-43e3-b551-a03750c74331",
+    "problemName": "Container With Most Water",
+    "problemUrl": "https://leetcode.com/problems/container-with-most-water/",
+    "constraints": "Array of non-negative integers",
+    "ideas": [
+      {
+        "ideaId": "1",
+        "description": "Two Pointers",
+        "timeComplexity": "O(n)",
+        "spaceComplexity": "O(1)"
+      }
+    ],
+    "testCases": "Input: [1,8,6,2,5,4,8,3,7]; Output: 49",
+    "code": "function maxArea(height) { /* implementation */ }",
+    "createdAt": "2025-03-17T10:40:00.000Z",
+    "updatedAt": "2025-03-17T10:40:00.000Z",
+    "language": "python"
+  },
+  {
+    "canvasId": "551cb806-044c-4c99-9f26-db3f085f50bc",
+    "problemName": "Merge Intervals",
+    "problemUrl": "https://leetcode.com/problems/merge-intervals/",
+    "constraints": "Array of intervals",
+    "ideas": [
+      {
+        "ideaId": "1",
+        "description": "Sort and Merge",
+        "timeComplexity": "O(n log n)",
+        "spaceComplexity": "O(n)"
+      }
+    ],
+    "testCases": "Input: [[1,3],[2,6],[8,10],[15,18]]; Output: [[1,6],[8,10],[15,18]]",
+    "code": "function merge(intervals) { /* implementation */ }",
+    "createdAt": "2025-03-17T10:45:00.000Z",
+    "updatedAt": "2025-03-17T10:15:00.000Z",
+    "language": "python"
+  }
+]

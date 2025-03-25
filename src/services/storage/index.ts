@@ -1,6 +1,6 @@
 import { type StorageProvider, StorageType } from '@/types/storage'
 import { createStorageProvider } from './providers'
-import type { CreateCanvas, UpdateCanvas, CreateIdea, UpdateIdea } from '@/types/canvas'
+import type { CreateCanvas, UpdateCanvas, CreateIdea, UpdateIdea, Canvas } from '@/types/canvas'
 import { StorageInitializationError } from '@/errors'
 
 interface InitializableStorageProvider extends StorageProvider {
@@ -41,6 +41,8 @@ export const storage = {
   getStorage().updateCanvas(canvasId, updates),
   deleteCanvas: (canvasId: string) => getStorage().deleteCanvas(canvasId),
   getCanvas: (canvasId: string) => getStorage().getCanvas(canvasId),
+  importCanvases: (canvases: Canvas[]) => getStorage().importCanvases(canvases),
+  exportCanvases: () => getStorage().exportCanvases(),
   
   getIdeas: (canvasId: string) => getStorage().getIdeas(canvasId),
   addIdea: (canvasId: string, idea: CreateIdea) => 

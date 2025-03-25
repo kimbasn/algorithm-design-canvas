@@ -69,10 +69,10 @@ export default function CanvasSection({ title, icon }: CanvasIdeasSectionProps) 
                     </div>
                     {currentCanvas?.ideas.map((idea) => (
                         <div key={idea.ideaId}>
-                            <div className="border text-sm">
+                            <div className="border text-sm border-gray-200 dark:border-gray-500">
                                 <div className="grid grid-cols-[1fr,auto]">
                                     <div className="grid grid-cols-2">
-                                        <div className="p-2 border-r row-span-2 flex flex-col gap-2">
+                                        <div className="p-2 border-r row-span-2 flex flex-col gap-2 border-gray-200 dark:border-gray-500">
                                             <div
 
                                                 contentEditable={true}
@@ -82,22 +82,22 @@ export default function CanvasSection({ title, icon }: CanvasIdeasSectionProps) 
                                             >
                                                 {idea.description}
                                             </div>
-                                            
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 hover:bg-red-50 dark:hover:bg-red-950/50"
-                                                    onClick={() => handleDeleteIdea(idea.ideaId)}
-                                                    aria-label="Delete idea"
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                                </Button>
-                                            
+
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 hover:bg-red-50 dark:hover:bg-red-950/50"
+                                                onClick={() => handleDeleteIdea(idea.ideaId)}
+                                                aria-label="Delete idea"
+                                            >
+                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                            </Button>
+
                                         </div>
 
 
                                         <div
-                                            className="p-2 border"
+                                            className="p-2 border border-gray-200 dark:border-gray-500"
                                             contentEditable={true}
                                             role="textbox"
                                             aria-label="Time complexity"

@@ -8,6 +8,7 @@ import CanvasSidebar from '@/components/Canvas/CanvasSidebar'
 import { CanvasProvider, useCanvasContext } from '@/context/CanvasContext'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { ThemeProvider, useTheme } from '@/components/theme-provider'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/sonner'
 
 export const Route = createRootRoute({
@@ -15,11 +16,13 @@ export const Route = createRootRoute({
     <ThemeProvider defaultTheme='system' storageKey='vite-ui-theme'>
       <CanvasProvider>
         <SidebarProvider>
-          <Root />
-          {/* <TanStackRouterDevtools /> */}
-          <Toaster />
-          <Analytics />
-          <SpeedInsights />
+          <TooltipProvider>
+            <Root />
+            {/* <TanStackRouterDevtools /> */}
+            <Toaster />
+            <Analytics />
+            <SpeedInsights />
+          </TooltipProvider>
         </SidebarProvider>
       </CanvasProvider>
     </ThemeProvider>

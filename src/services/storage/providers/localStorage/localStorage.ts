@@ -219,62 +219,49 @@ export class LocalStorageProvider implements StorageProvider {
     return this.canvases
   }
 
-  async importCanvases(canvases: Canvas[]): Promise<{
-    imported: Canvas[],
-    duplicates: Array<{
-      original: Canvas,
-      duplicate: Canvas
-    }>
-  }> {
+  async importCanvases(canvases: Canvas[]): Promise<{ totalImported: number, duplicates: Canvas[] }> {
     await this.ensureInitialized()
     
-    const result = {
-      imported: [] as Canvas[],
-      duplicates: [] as Array<{ original: Canvas, duplicate: Canvas }>
-    }
+    const duplicates: Canvas[] = []
 
-    for (const canvas of canvases) { // TODO: Validate canvas
-      const newCanvas = {
-        ...createEmptyCanvas(),
-        ...canvas,
-        canvasId: canvas.canvasId ?? createEmptyCanvas().canvasId
-      }
+    for (const canvas of canvases) {
+        const newCanvas = {
+            ...createEmptyCanvas(),
+            ...canvas,
+            canvasId: canvas.canvasId ?? createEmptyCanvas().canvasId
+        }
 
-      // Check for duplicates by canvasId
-      const existingCanvas = this.canvases.find(c => c.canvasId === newCanvas.canvasId)
-      
-      if (existingCanvas) {
-        result.duplicates.push({
-          original: existingCanvas,
-          duplicate: newCanvas
-        })
-        continue
-      }
+        // Check for duplicates by canvasId
+        const existingCanvas = this.canvases.find(c => c.canvasId === newCanvas.canvasId)
+        
+        if (existingCanvas) {
+            duplicates.push(canvas)
+            continue
+        }
 
-      // Check for potential duplicates by problem name
-      const nameDuplicate = this.canvases.find(c => 
-        c.problemName.toLowerCase() === newCanvas.problemName.toLowerCase()
-      )
+        // Check for potential duplicates by problem name
+        const nameDuplicate = this.canvases.find(c => 
+            c.problemName.toLowerCase() === newCanvas.problemName.toLowerCase()
+        )
 
-      if (nameDuplicate) {
-        result.duplicates.push({
-          original: nameDuplicate,
-          duplicate: newCanvas
-        })
-        continue
-      }
+        if (nameDuplicate) {
+            duplicates.push(canvas)
+            continue
+        }
 
-      // If no duplicates found, add to canvases
-      this.canvases.push(newCanvas)
-      result.imported.push(newCanvas)
+        // If not duplicate, add to canvases
+        this.canvases.push(newCanvas)
     }
 
     // Only save if we actually imported something
-    if (result.imported.length > 0) {
-      this.saveToStorage()
+    if (duplicates.length < canvases.length) {
+        this.saveToStorage()
     }
 
-    return result
+    return {
+      totalImported: this.canvases.length,
+      duplicates: duplicates
+    }
   }
 
   async exportCanvases(): Promise<Canvas[]> {

@@ -382,32 +382,19 @@ describe('LocalStorageProvider', () => {
       ]
 
       // Import canvases
-      const result = await provider.importCanvases(canvasesToImport)
+      const { totalImported, duplicates } = await provider.importCanvases(canvasesToImport)
 
       // Verify results
-      expect(result.imported).toHaveLength(1)
-      expect(result.imported[0].problemName).toBe('New Problem')
-      
-      expect(result.duplicates).toHaveLength(2)
-      expect(result.duplicates).toEqual(
+      expect(totalImported).toBe(2)
+      expect(duplicates).toHaveLength(2)
+      expect(duplicates).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            original: expect.objectContaining({
-              canvasId: originalCanvas.canvasId,
-              problemName: 'Original Problem'
-            }),
-            duplicate: expect.objectContaining({
-              canvasId: originalCanvas.canvasId,
-              problemName: 'Duplicate ID Problem'
-            })
+            canvasId: originalCanvas.canvasId,
+            problemName: 'Duplicate ID Problem'
           }),
           expect.objectContaining({
-            original: expect.objectContaining({
-              problemName: 'Original Problem'
-            }),
-            duplicate: expect.objectContaining({
-              problemName: 'Original Problem'
-            })
+            problemName: 'Original Problem'
           })
         ])
       )
@@ -429,10 +416,10 @@ describe('LocalStorageProvider', () => {
     })
 
     it('should handle empty import array', async () => {
-      const result = await provider.importCanvases([])
+      const { totalImported, duplicates } = await provider.importCanvases([])
       
-      expect(result.imported).toHaveLength(0)
-      expect(result.duplicates).toHaveLength(0)
+      expect(totalImported).toBe(0)
+      expect(duplicates).toHaveLength(0)
     })
 
     it('should properly cleanup storage state', async () => {
@@ -479,11 +466,14 @@ describe('LocalStorageProvider', () => {
       await provider.getCanvases()
 
       // Import exported canvases
-      const result = await provider.importCanvases(exported)
+      const { totalImported, duplicates } = await provider.importCanvases(exported)
+
+      const canvases = await provider.getCanvases()
 
       // Verify import results
-      expect(result.imported).toHaveLength(1)
-      expect(result.duplicates).toHaveLength(0)
+      expect(canvases).toHaveLength(1)
+      expect(duplicates).toHaveLength(0)
+      expect(totalImported).toBe(1)
 
       // Verify imported canvas matches original
       const importedCanvas = await provider.getCanvas(canvas.canvasId)

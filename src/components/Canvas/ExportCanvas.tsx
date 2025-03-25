@@ -1,310 +1,109 @@
-import * as React from "react"
-import {
-    ColumnDef,
-    ColumnFiltersState,
-    SortingState,
-    VisibilityState,
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable,
-} from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
+import { useCanvasContext } from '@/context/CanvasContext';
+import { Download } from 'lucide-react';
 
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
+export function ExportCanvas() {
+    const [open, setOpen] = useState(false);
+    const [selectedCanvases, setSelectedCanvases] = useState<string[]>([]);
+    const { canvases } = useCanvasContext();
 
-const data: Payment[] = [
-    {
-        id: "m5gr84i9",
-        amount: 316,
-        status: "success",
-        email: "ken99@example.com",
-    },
-    {
-        id: "3u1reuv4",
-        amount: 242,
-        status: "success",
-        email: "Abe45@example.com",
-    },
-    {
-        id: "derv1ws0",
-        amount: 837,
-        status: "processing",
-        email: "Monserrat44@example.com",
-    },
-    {
-        id: "5kma53ae",
-        amount: 874,
-        status: "success",
-        email: "Silas22@example.com",
-    },
-    {
-        id: "bhqecj4p",
-        amount: 721,
-        status: "failed",
-        email: "carmella@example.com",
-    },
-]
+    const handleExport = async () => {
+        try {
+            const selectedData = canvases.filter(canvas =>
+                selectedCanvases.includes(canvas.canvasId)
+            );
 
-export type Payment = {
-    id: string
-    amount: number
-    status: "pending" | "processing" | "success" | "failed"
-    email: string
-}
+            if (selectedData.length === 0) {
+                toast.error("No canvases selected", {
+                    description: "Please select at least one canvas to export.",
+                });
+                return;
+            }
 
-export const columns: ColumnDef<Payment>[] = [
-    {
-        id: "select",
-        header: ({ table }) => (
-            <Checkbox
-                checked={
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && "indeterminate")
-                }
-                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                aria-label="Select all"
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label="Select row"
-            />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-    },
-    {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("status")}</div>
-        ),
-    },
-    {
-        accessorKey: "email",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Email
-                    <ArrowUpDown />
-                </Button>
-            )
-        },
-        cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-    },
-    {
-        accessorKey: "amount",
-        header: () => <div className="text-right">Amount</div>,
-        cell: ({ row }) => {
-            const amount = parseFloat(row.getValue("amount"))
+            const dataStr = JSON.stringify(selectedData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'canvases.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
 
-            // Format the amount as a dollar amount
-            const formatted = new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-            }).format(amount)
+            toast.success("Canvases Exported", {
+                description: `Exported ${selectedData.length} canvas${selectedData.length !== 1 ? 'es' : ''}`,
+            });
+            setOpen(false);
+        } catch (error) {
+            toast.error("Error", {
+                description: "Failed to export canvases.",
+            });
+        }
+    };
 
-            return <div className="text-right font-medium">{formatted}</div>
-        },
-    },
-    {
-        id: "actions",
-        enableHiding: false,
-        cell: ({ row }) => {
-            const payment = row.original
-
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(payment.id)}
-                        >
-                            Copy payment ID
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>View customer</DropdownMenuItem>
-                        <DropdownMenuItem>View payment details</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            )
-        },
-    },
-]
-
-export function DataTableDemo() {
-    const [sorting, setSorting] = React.useState<SortingState>([])
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-        []
-    )
-    const [columnVisibility, setColumnVisibility] =
-        React.useState<VisibilityState>({})
-    const [rowSelection, setRowSelection] = React.useState({})
-
-    const table = useReactTable({
-        data,
-        columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onColumnVisibilityChange: setColumnVisibility,
-        onRowSelectionChange: setRowSelection,
-        state: {
-            sorting,
-            columnFilters,
-            columnVisibility,
-            rowSelection,
-        },
-    })
+    const toggleCanvas = (canvasId: string) => {
+        setSelectedCanvases(prev =>
+            prev.includes(canvasId)
+                ? prev.filter(id => id !== canvasId)
+                : [...prev, canvasId]
+        );
+    };
 
     return (
-        <div className="w-full">
-            <div className="flex items-center py-4">
-                <Input
-                    placeholder="Filter emails..."
-                    value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("email")?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-sm"
-                />
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
-                            Columns <ChevronDown />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        {table
-                            .getAllColumns()
-                            .filter((column) => column.getCanHide())
-                            .map((column) => {
-                                return (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        className="capitalize"
-                                        checked={column.getIsVisible()}
-                                        onCheckedChange={(value) =>
-                                            column.toggleVisibility(!!value)
-                                        }
-                                    >
-                                        {column.id}
-                                    </DropdownMenuCheckboxItem>
-                                )
-                            })}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </TableHead>
-                                    )
-                                })}
-                            </TableRow>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Export Canvases</DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                        Select the canvases you want to export:
+                    </p>
+                    <div className="max-h-[300px] overflow-y-auto space-y-2">
+                        {canvases.map(canvas => (
+                            <div key={canvas.canvasId} className="flex items-center space-x-2">
+                                <Checkbox
+                                    id={canvas.canvasId}
+                                    checked={selectedCanvases.includes(canvas.canvasId)}
+                                    onCheckedChange={() => toggleCanvas(canvas.canvasId)}
+                                />
+                                <label
+                                    htmlFor={canvas.canvasId}
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
+                                    {canvas.problemName}
+                                </label>
+                            </div>
                         ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
-                                >
-                                    No results.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <div className="flex-1 text-sm text-muted-foreground">
-                    {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                    {table.getFilteredRowModel().rows.length} row(s) selected.
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleExport}
+                            disabled={selectedCanvases.length === 0}
+                        >
+                            Export Selected
+                        </Button>
+                    </div>
                 </div>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div>
-        </div>
-    )
+            </DialogContent>
+        </Dialog>
+    );
 }

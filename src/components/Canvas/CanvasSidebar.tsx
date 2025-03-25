@@ -32,10 +32,15 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MoreHorizontal, Edit, DeleteIcon } from 'lucide-react';
+import { MoreHorizontal, Edit, DeleteIcon, Search } from 'lucide-react';
 import { type Canvas } from '@/types/canvas';
 import CreateCanvasForm from '@/components/Canvas/CreateCanvasForm';
 import { toast } from 'sonner';
@@ -50,10 +55,17 @@ export default function CanvasSidebar() {
     const [newCanvasUrl, setNewCanvasUrl] = useState('');
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Filter canvases based on search query
+    const filteredCanvases = canvases.filter(canvas =>
+        canvas.problemName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const handleCanvasSelect = (canvas: Canvas) => {
         setCurrentCanvas(canvas);
         navigate({ to: `/canvases/${canvas.canvasId}` });
+        setSearchQuery('');
     };
 
     const handleEditClick = (canvas: Canvas) => {
@@ -139,13 +151,24 @@ export default function CanvasSidebar() {
                     </div>
                 </SidebarHeader>
 
-                <div className="p-5">
+                <div className="p-5 flex flex-col gap-4">
                     <CreateCanvasForm />
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        <Input
+                            type="text"
+                            placeholder="Search canvases..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9"
+                        />
+                    </div>
+                    
                 </div>
 
                 <SidebarContent className="flex-1 overflow-y-auto">
                     <SidebarMenu>
-                        {canvases.map((canvas, index) => (
+                        {filteredCanvases.map((canvas, index) => (
                             <SidebarMenuItem
                                 key={index}
                                 className={cn(
@@ -156,14 +179,26 @@ export default function CanvasSidebar() {
                                 )}
                                 onClick={() => handleCanvasSelect(canvas)}
                             >
-                                <div className="flex-1 min-w-0">
-                                    <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                                        {canvas.problemName}
-                                    </div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                                        Updated {new Date(canvas.updatedAt).toLocaleDateString()}
-                                    </div>
-                                </div>
+                                {canvas.problemName.length > 20 ? (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                                                    {canvas.problemName.slice(0, 20)}
+                                                </div>
+                                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                    Updated {new Date(canvas.updatedAt).toLocaleDateString()}
+                                                </div>
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{canvas.problemName}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                ) : (
+                                    canvas.problemName
+                                )}
+                                
                                 <SidebarMenuAction>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -194,11 +229,16 @@ export default function CanvasSidebar() {
 
                 <div className={cn(
                     "p-3 border-t border-gray-200 dark:border-gray-700",
-                    "flex items-center",
+                    "flex items-center justify-between",
                     "bg-gray-50/50 dark:bg-[#1f2937]/50",
                     "text-gray-900 dark:text-gray-100"
                 )}>
-                    Total Canvas: {canvases.length}
+                    <span>Total Canvas: {canvases.length}</span>
+                    {searchQuery && (
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {filteredCanvases.length} found
+                        </span>
+                    )}
                 </div>
             </Sidebar>
 

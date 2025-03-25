@@ -15,6 +15,8 @@ interface CanvasContextProps {
     deleteIdea: (canvasId: string, ideaId: string) => Promise<void>
     getLastEditedCanvas: () => Promise<Canvas | null>
     getCanvas: (id: string) => Promise<Canvas | null>
+    importCanvases: (data: Canvas[]) => Promise<{ totalImported: number, duplicates: Canvas[] }>
+    exportCanvases: () => Promise<Canvas[]>
     loading: boolean
     error: string | null
 }
@@ -23,7 +25,7 @@ const CanvasContext = createContext<CanvasContextProps | undefined>(undefined)
 
 
 
-export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ children }): React.ReactElement => {
     const [canvases, setCanvases] = useState<Canvas[]>([])
     const [currentCanvas, setCurrentCanvas] = useState<Canvas | null>(null)
     const [loading, setLoading] = useState(true)
@@ -78,6 +80,18 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             throw err
         }
     }, [])
+
+    const importCanvases = useCallback(async (data: Canvas[]): Promise<{ totalImported: number, duplicates: Canvas[] }> => {
+        try {
+            const { totalImported, duplicates } = await storage.importCanvases(data);
+            setCanvases(await storage.getCanvases() || []);
+            return { totalImported, duplicates };
+        } catch (err) {
+            console.error('Error importing canvases:', err);
+            setError('Failed to import canvases');
+            throw err;
+        }
+    }, []);
 
     const updateCanvas = useCallback(async (id: string, updates: UpdateCanvas): Promise<void> => {
         try {
@@ -219,6 +233,16 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [])
 
+    const exportCanvases = useCallback(async (): Promise<Canvas[]> => {
+        try {
+            return await storage.exportCanvases();
+        } catch (err) {
+            console.error('Error exporting canvases:', err);
+            setError('Failed to export canvases');
+            throw err;
+        }
+    }, []);
+
     const value = {
         canvases,
         currentCanvas,
@@ -231,6 +255,8 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         deleteIdea,
         getLastEditedCanvas,
         getCanvas,
+        importCanvases,
+        exportCanvases,
         loading,
         error
     }

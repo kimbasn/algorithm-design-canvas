@@ -26,6 +26,8 @@ export interface StorageProvider {
   createCanvas(data: CreateCanvas): Promise<Canvas>
   updateCanvas(id: string, data: UpdateCanvas): Promise<void>
   deleteCanvas(id: string): Promise<void>
+  importCanvases(canvases: Canvas[]): Promise<{ totalImported: number, duplicates: Canvas[] }>
+  exportCanvases(): Promise<Canvas[]>
   
   // Idea operations
   getIdeas(canvasId: string): Promise<Idea[] | null>
