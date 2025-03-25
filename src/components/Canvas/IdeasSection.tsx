@@ -4,14 +4,12 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 import { useCanvasContext } from "@/context/CanvasContext";
-import { Idea } from "@/types/canvas";
 interface CanvasIdeasSectionProps {
     title: string;
-    placeholder: string;
     icon?: React.ReactNode;
 }
 
-export default function CanvasSection({ title, placeholder, icon }: CanvasIdeasSectionProps) {
+export default function CanvasSection({ title, icon }: CanvasIdeasSectionProps) {
     const [isExpanded, setIsExpanded] = useState(true);
     const { currentCanvas, addIdea, updateIdea, deleteIdea } = useCanvasContext();
 
@@ -82,7 +80,7 @@ export default function CanvasSection({ title, placeholder, icon }: CanvasIdeasS
                                                 aria-label="Idea description"
                                                 onBlur={(e) => updateIdea(currentCanvas?.canvasId, idea.ideaId, { description: e.currentTarget.innerText })}
                                             >
-                                                { idea.ideaId}: {idea.description}
+                                                {idea.description}
                                             </div>
                                             
                                                 <Button

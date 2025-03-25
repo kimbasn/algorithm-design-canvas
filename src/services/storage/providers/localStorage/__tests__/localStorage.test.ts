@@ -183,7 +183,6 @@ describe('LocalStorageProvider', () => {
 
       it('should update last edited canvas if deleted canvas was last edited', async () => {
         const canvas = await createTestCanvas()
-        await provider.setLastEditedCanvasId(canvas.canvasId)
         await provider.deleteCanvas(canvas.canvasId)
 
         const lastEdited = await provider.getLastEditedCanvasId()
@@ -272,7 +271,6 @@ describe('LocalStorageProvider', () => {
     describe('Session Management', () => {
       it('should manage last edited canvas ID', async () => {
         const canvas = await createTestCanvas()
-        await provider.setLastEditedCanvasId(canvas.canvasId)
 
         const lastEdited = await provider.getLastEditedCanvasId()
         expect(lastEdited).toBe(canvas.canvasId)

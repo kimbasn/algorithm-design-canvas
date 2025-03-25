@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Outlet, createRootRoute, useNavigate } from '@tanstack/react-router'
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from "@vercel/speed-insights/react"
@@ -27,35 +27,53 @@ export const Route = createRootRoute({
 })
 
 function Root() {
-  const { canvases, createCanvas, getLastEditedCanvas, loading } = useCanvasContext();
+  const { canvases, currentCanvas, createCanvas, getLastEditedCanvas, loading } = useCanvasContext();
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const initialized = useRef(false);
 
+  // Handle initial load and empty state
   useEffect(() => {
     const initializeCanvas = async () => {
-      if (loading) return; // Wait for initial load to complete
+      if (loading || initialized.current) return;
+      initialized.current = true;
 
-      if (canvases.length === 0) {
-        // If no canvases exist, create a new one
+      const lastEditedCanvas = await getLastEditedCanvas();
+      if (lastEditedCanvas) {
+        navigate({ to: `/canvases/${lastEditedCanvas.canvasId}` });
+      } else if (canvases.length === 0) {
         const newCanvas = await createCanvas({
-          problemName: 'Untitled Canvas',
-          problemUrl: '',
+          problemName: 'New Canvas',
+          problemUrl: ''
         });
         navigate({ to: `/canvases/${newCanvas.canvasId}` });
-      } else {
-        // If canvases exist, get the last edited one
-        const lastEditedCanvas = await getLastEditedCanvas();
-        if (lastEditedCanvas) {
-          navigate({ to: `/canvases/${lastEditedCanvas.canvasId}` });
-        } else {
-          // If no last edited canvas, use the first one
-          navigate({ to: `/canvases/${canvases[0].canvasId}` });
-        }
       }
     };
 
     initializeCanvas();
-  }, [canvases, createCanvas, getLastEditedCanvas, navigate, loading]);
+  }, [loading]);
+
+  // Handle navigation when current canvas changes
+  useEffect(() => {
+    if (!loading && initialized.current) {
+      if (!currentCanvas && canvases.length > 0) {
+        // If current canvas is cleared but we have canvases, navigate to the last edited
+        getLastEditedCanvas().then(lastEdited => {
+          if (lastEdited) {
+            navigate({ to: `/canvases/${lastEdited.canvasId}` });
+          }
+        });
+      } else if (!currentCanvas && canvases.length === 0) {
+        // If no canvases exist, create a new one
+        createCanvas({
+          problemName: 'New Canvas',
+          problemUrl: ''
+        }).then(newCanvas => {
+          navigate({ to: `/canvases/${newCanvas.canvasId}` });
+        });
+      }
+    }
+  }, [currentCanvas, canvases.length, loading]);
 
   useEffect(() => {
     const root = window.document.documentElement

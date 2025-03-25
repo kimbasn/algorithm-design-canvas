@@ -21,23 +21,14 @@ interface CanvasContextProps {
 
 const CanvasContext = createContext<CanvasContextProps | undefined>(undefined)
 
-/**
- * Helper function to find the most recently edited canvas
- */
-const findLastEditedCanvas = (canvases: Canvas[]): Canvas | null => {
-    if (canvases.length === 0) return null
-    return canvases.reduce((mostRecent, current) => {
-        if (!mostRecent) return current
-        return current.updatedAt > mostRecent.updatedAt ? current : mostRecent
-    }, canvases[0])
-}
+
 
 export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [canvases, setCanvases] = useState<Canvas[]>([])
     const [currentCanvas, setCurrentCanvas] = useState<Canvas | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [isInitialized, setIsInitialized] = useState(false)
+    const [, setIsInitialized] = useState(false)
 
     // Initialize state from storage
     useEffect(() => {
@@ -74,26 +65,11 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         initializeState()
     }, [])
 
-    // Update last edited canvas ID when current canvas changes
-    useEffect(() => {
-        const updateLastEdited = async () => {
-            if (currentCanvas && isInitialized) {
-                try {
-                    await storage.setLastEditedCanvasId(currentCanvas.canvasId)
-                } catch (err) {
-                    console.error('Error updating last edited canvas:', err)
-                    setError('Failed to update last edited canvas')
-                }
-            }
-        }
-
-        updateLastEdited()
-    }, [currentCanvas, isInitialized])
-
     const createCanvas = useCallback(async (data: CreateCanvas): Promise<Canvas> => {
         try {
             const newCanvas = await storage.createCanvas(data)
-            setCanvases(prev => [...prev, newCanvas])
+            setCanvases(await storage.getCanvases() || [])
+            // Set the current canvas immediately after creation
             setCurrentCanvas(newCanvas)
             return newCanvas
         } catch (err) {
@@ -109,11 +85,7 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             const updatedCanvas = await storage.getCanvas(id)
             if (!updatedCanvas) throw new Error('Canvas not found after update')
 
-            setCanvases(prev =>
-                prev.map(canvas =>
-                    canvas.canvasId === id ? updatedCanvas : canvas
-                )
-            )
+            setCanvases(await storage.getCanvases() || [])
 
             if (currentCanvas?.canvasId === id) {
                 setCurrentCanvas(updatedCanvas)
@@ -127,23 +99,37 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const deleteCanvas = useCallback(async (id: string): Promise<void> => {
         try {
-            await storage.deleteCanvas(id)
-            setCanvases(prev => prev.filter(canvas => canvas.canvasId !== id))
-
+            // If we're deleting the current canvas, handle navigation first
             if (currentCanvas?.canvasId === id) {
-                const remaining = canvases.filter(canvas => canvas.canvasId !== id)
-                const nextCanvas = findLastEditedCanvas(remaining)
-                setCurrentCanvas(nextCanvas)
-                if (nextCanvas) {
-                    await storage.setLastEditedCanvasId(nextCanvas.canvasId)
+                setCurrentCanvas(null);
+                await storage.deleteCanvas(id);
+                const remaining = await storage.getCanvases() || [];
+                setCanvases(remaining);
+
+                // If there are remaining canvases, select the last edited one
+                if (remaining.length > 0) {
+                    const lastEditedId = await storage.getLastEditedCanvasId();
+                    if (lastEditedId) {
+                        const lastEditedCanvas = await storage.getCanvas(lastEditedId);
+                        if (lastEditedCanvas) {
+                            setCurrentCanvas(lastEditedCanvas);
+                        }
+                    } else {
+                        // If no last edited canvas, select the first remaining one
+                        setCurrentCanvas(remaining[0]);
+                    }
                 }
+            } else {
+                // If we're not deleting the current canvas, just update state
+                await storage.deleteCanvas(id);
+                setCanvases(await storage.getCanvases() || []);
             }
         } catch (err) {
-            console.error('Error deleting canvas:', err)
-            setError('Failed to delete canvas')
-            throw err
+            console.error('Error deleting canvas:', err);
+            setError('Failed to delete canvas');
+            throw err;
         }
-    }, [currentCanvas, canvases])
+    }, [currentCanvas]);
 
     const addIdea = useCallback(async (canvasId: string, idea: CreateIdea): Promise<void> => {
         try {

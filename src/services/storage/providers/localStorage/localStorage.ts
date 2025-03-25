@@ -16,7 +16,7 @@ import {
   createEmptyIdea,
 } from '@/types/canvas'
 import { STORAGE_KEYS } from './constants'
-import { debounce } from 'lodash'
+//import { debounce } from 'lodash'
 
 
 class LocalStorage implements BaseStorage {
@@ -114,6 +114,17 @@ export class LocalStorageProvider implements StorageProvider {
     }
   }
 
+  /**
+ * Helper function to find the most recently edited canvas
+ */
+  private findLastEditedCanvas(): Canvas | null {
+    if (this.canvases.length === 0) return null
+    return this.canvases.reduce((mostRecent, current) => {
+        if (!mostRecent) return current
+        return current.updatedAt > mostRecent.updatedAt ? current : mostRecent
+    }, this.canvases[0])
+  }
+
   // private async getData<T>(key: string): Promise<T | null> {
   //   try {
   //     const data = await this.storage.get(key)
@@ -151,9 +162,9 @@ export class LocalStorageProvider implements StorageProvider {
     await this.setDataWithRetry(STORAGE_KEYS.CANVAS_DATA, this.canvases)
   }
 
-  private debouncedSave = debounce(async () => {
-    await this.saveToStorage()
-  }, 1000)
+  // private debouncedSave = debounce(async () => {
+  //   await this.saveToStorage()
+  // }, 1000)
 
   // private validateCanvas(canvas: Canvas): void {
   //   if (!canvas.canvasId) { // TODO: check if canvasId is a valid UUID
@@ -188,7 +199,7 @@ export class LocalStorageProvider implements StorageProvider {
       } : c
     )
 
-    this.debouncedSave()
+    this.saveToStorage()
     await this.setLastEditedCanvasId(id)
   }
 
@@ -196,7 +207,6 @@ export class LocalStorageProvider implements StorageProvider {
     try {
       this.canvases = []
       this._isReady = false
-      this.debouncedSave.cancel() // Cancel any pending saves
       await this.storage.clear()
     } catch (error) {
       throw new StorageOperationError('cleanup', 'storage', undefined, error)
@@ -261,7 +271,7 @@ export class LocalStorageProvider implements StorageProvider {
 
     // Only save if we actually imported something
     if (result.imported.length > 0) {
-      this.debouncedSave()
+      this.saveToStorage()
     }
 
     return result
@@ -296,7 +306,7 @@ export class LocalStorageProvider implements StorageProvider {
       }
 
       this.canvases = [...this.canvases, newCanvas]
-      this.debouncedSave()
+      this.saveToStorage()
       await this.setLastEditedCanvasId(newCanvas.canvasId)
       return newCanvas
     } catch (error) {
@@ -309,12 +319,17 @@ export class LocalStorageProvider implements StorageProvider {
     this.getCanvasOrThrow(id)
 
     this.canvases = this.canvases.filter(canvas => canvas.canvasId !== id)
-    this.debouncedSave()
+    this.saveToStorage()
 
     // Clean up last edited canvas if it was the deleted one
     const lastEdited = await this.getLastEditedCanvasId()
     if (lastEdited === id) {
-      await this.setLastEditedCanvasId('')
+      const nextCanvas = this.findLastEditedCanvas()
+      if (nextCanvas) {
+        await this.setLastEditedCanvasId(nextCanvas.canvasId)
+      } else {
+        await this.setLastEditedCanvasId('')
+      }
     }
   }
 
@@ -342,7 +357,7 @@ export class LocalStorageProvider implements StorageProvider {
       } : c
     )
 
-    this.debouncedSave()
+    this.saveToStorage()
     await this.setLastEditedCanvasId(canvasId)
   }
 
@@ -365,7 +380,7 @@ export class LocalStorageProvider implements StorageProvider {
       return canvas
     })
     
-    this.debouncedSave()
+    this.saveToStorage()
     await this.setLastEditedCanvasId(canvasId)
   }
 
@@ -384,7 +399,7 @@ export class LocalStorageProvider implements StorageProvider {
       return canvas
     })
 
-    this.debouncedSave()
+    this.saveToStorage()
     await this.setLastEditedCanvasId(canvasId)
   }
 
@@ -394,7 +409,7 @@ export class LocalStorageProvider implements StorageProvider {
     return await this.storage.get(STORAGE_KEYS.LAST_EDITED_CANVAS)
   }
 
-  async setLastEditedCanvasId(id: string): Promise<void> {
+  private async setLastEditedCanvasId(id: string): Promise<void> {
     await this.ensureInitialized()
     if (id !== '') {
       this.getCanvasOrThrow(id)

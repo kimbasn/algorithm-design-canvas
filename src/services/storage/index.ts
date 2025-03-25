@@ -49,8 +49,5 @@ export const storage = {
   getStorage().updateIdea(canvasId, ideaId, updates),
   deleteIdea: (canvasId: string, ideaId: string) => 
   getStorage().deleteIdea(canvasId, ideaId),
-  
   getLastEditedCanvasId: () => getStorage().getLastEditedCanvasId(),
-  setLastEditedCanvasId: (canvasId: string) => 
-  getStorage().setLastEditedCanvasId(canvasId),
 }

@@ -31,8 +31,8 @@ import { canvasSchema } from '@/types/canvas';
 export default function CreateCanvasForm() {
     const [open, setOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const { setCurrentCanvas, createCanvas } = useCanvasContext();
-
+    const { createCanvas } = useCanvasContext();
+    
     const form = useForm<z.infer<typeof canvasSchema>>({
         resolver: zodResolver(canvasSchema),
         defaultValues: {
@@ -44,20 +44,19 @@ export default function CreateCanvasForm() {
     async function onSubmit(values: z.infer<typeof canvasSchema>) {
         try {
             setIsLoading(true);
-            const newCanvas = await createCanvas({
+            await createCanvas({
                 ...values,
                 problemUrl: values.problemUrl ?? '',
             });
-            setCurrentCanvas(newCanvas);
             form.reset();
             setOpen(false);
             toast.success("Canvas created", {
                 description: `"${values.problemName}" has been created successfully`,
-            })
+            });
         } catch (error) {
             toast.error("Failed to create canvas", {
                 description: "Please try again",
-            })
+            });
         } finally {
             setIsLoading(false);
         }
