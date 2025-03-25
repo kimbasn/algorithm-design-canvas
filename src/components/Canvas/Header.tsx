@@ -2,7 +2,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useCanvasContext } from '@/context/CanvasContext'
 import { ModeToggle } from '@/components/mode-toggle'
 import { Button } from '../ui/button'
-import { Clock, Pause, RotateCcw, Play } from "lucide-react"
+import { Pause, RotateCcw, Play } from "lucide-react"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
@@ -47,7 +47,7 @@ const Header = () => {
           rel="noopener noreferrer"
           className="text-blue-600 hover:text-blue-700"
         >
-          {currentCanvas?.problemName || 'Untitled Problem'}
+          {currentCanvas?.problemName}
         </a>
       </div>
       <div className="flex items-center gap-4">
@@ -90,7 +90,7 @@ const Header = () => {
       </div>
 
       <div className="flex items-center space-x-2">
-        <Button className='bg-slate-700 text-white border-2 cursor-pointer'>
+        <Button className='bg-slate-700 text-white border-2 cursor-pointer' disabled>
           <i className="fas fa-share-alt mr-2"></i> Share
         </Button>
         <Button className="bg-blue-500 text-white border-2 cursor-pointer">

@@ -1,8 +1,7 @@
 import { type Canvas, Language } from '@/types/canvas';
 
-export const testCanvases: Canvas[] = [
+export const testCanvases: Omit<Canvas, 'canvasId'>[] = [
     {
-        canvasId: "1",
         problemName: "Two Sum",
         problemUrl: "https://leetcode.com/problems/two-sum/",
         constraints: "Array of integers, target sum",
@@ -17,7 +16,6 @@ export const testCanvases: Canvas[] = [
         language: Language.PYTHON
     },
     {
-        canvasId: "2",
         problemName: "Reverse Linked List",
         problemUrl: "https://leetcode.com/problems/reverse-linked-list/",
         constraints: "Singly linked list",
@@ -32,7 +30,6 @@ export const testCanvases: Canvas[] = [
         language: Language.PYTHON
     },
     {
-        canvasId: "3",
         problemName: "Valid Parentheses",
         problemUrl: "https://leetcode.com/problems/valid-parentheses/",
         constraints: "String containing '(', ')', '{', '}', '[' and ']'",
@@ -46,7 +43,6 @@ export const testCanvases: Canvas[] = [
         language: Language.PYTHON
     },
     {
-        canvasId: "4",
         problemName: "Merge Two Sorted Lists",
         problemUrl: "https://leetcode.com/problems/merge-two-sorted-lists/",
         constraints: "Two sorted linked lists",
@@ -61,7 +57,6 @@ export const testCanvases: Canvas[] = [
         language: Language.PYTHON
     },
     {
-        canvasId: "5",
         problemName: "Best Time to Buy and Sell Stock",
         problemUrl: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/",
         constraints: "Array of stock prices",
@@ -75,7 +70,6 @@ export const testCanvases: Canvas[] = [
         language: Language.PYTHON
     },
     {
-        canvasId: "6",
         problemName: "Maximum Subarray",
         problemUrl: "https://leetcode.com/problems/maximum-subarray/",
         constraints: "Array of integers",
@@ -89,7 +83,6 @@ export const testCanvases: Canvas[] = [
         language: Language.PYTHON
     },
     {
-        canvasId: "7",
         problemName: "Climbing Stairs",
         problemUrl: "https://leetcode.com/problems/climbing-stairs/",
         constraints: "Positive integer n",
@@ -103,7 +96,6 @@ export const testCanvases: Canvas[] = [
         language: Language.PYTHON
     },
     {
-        canvasId: "8",
         problemName: "Longest Palindromic Substring",
         problemUrl: "https://leetcode.com/problems/longest-palindromic-substring/",
         constraints: "String s",
@@ -118,7 +110,6 @@ export const testCanvases: Canvas[] = [
         language: Language.PYTHON
     },
     {
-        canvasId: "9",
         problemName: "Container With Most Water",
         problemUrl: "https://leetcode.com/problems/container-with-most-water/",
         constraints: "Array of non-negative integers",
@@ -132,7 +123,6 @@ export const testCanvases: Canvas[] = [
         language: Language.PYTHON
     },
     {
-        canvasId: "10",
         problemName: "Merge Intervals",
         problemUrl: "https://leetcode.com/problems/merge-intervals/",
         constraints: "Array of intervals",

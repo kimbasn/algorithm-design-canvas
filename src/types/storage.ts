@@ -35,5 +35,5 @@ export interface StorageProvider {
   
   // Session management
   getLastEditedCanvasId(): Promise<string | null>
-  setLastEditedCanvasId(id: string): Promise<void>
+  //private setLastEditedCanvasId(id: string): Promise<void>
 }

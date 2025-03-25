@@ -42,7 +42,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export default function CanvasSidebar() {
-    const { canvases, currentCanvas, setCurrentCanvas, createCanvas, updateCanvas, deleteCanvas } = useCanvasContext();
+    const { canvases, currentCanvas, setCurrentCanvas, updateCanvas, deleteCanvas } = useCanvasContext();
     const navigate = useNavigate();
     const [canvasToEdit, setCanvasToEdit] = useState<Canvas | null>(null);
     const [canvasToDelete, setCanvasToDelete] = useState<Canvas | null>(null);
@@ -96,54 +96,22 @@ export default function CanvasSidebar() {
         if (canvasToDelete) {
             const canvasName = canvasToDelete.problemName;
             const canvasId = canvasToDelete.canvasId;
-            const canvasUrl = canvasToDelete.problemUrl;
 
             try {
+                // If we're deleting the current canvas, clear it first to prevent flickering
+                if (currentCanvas?.canvasId === canvasId) {
+                    setCurrentCanvas(null);
+                }
+
                 await deleteCanvas(canvasId);
 
-                // Only proceed with UI updates and navigation after successful deletion
-                if (currentCanvas?.canvasId === canvasId) {
-                    const remainingCanvases = canvases.filter(c => c.canvasId !== canvasId);
-                    if (remainingCanvases.length > 0) {
-                        handleCanvasSelect(remainingCanvases[0]);
-                    } else {
-                        const newCanvas = await createCanvas({
-                            problemName: 'New Canvas',
-                            problemUrl: ''
-                        });
-                        setCurrentCanvas(newCanvas);
-                        navigate({ to: `/canvases/${newCanvas.canvasId}` });
-                    }
-                }
+                // Let the root component handle navigation if needed
+                setDeleteDialogOpen(false);
+                setCanvasToDelete(null);
 
                 toast.success("Canvas deleted", {
                     description: `"${canvasName}" has been deleted`,
-                    action: {
-                        label: "Undo",
-                        onClick: async () => {
-                            try {
-                                // Create a new canvas with the same ID
-                                const restoredCanvas = await createCanvas({
-                                    problemName: canvasName,
-                                    problemUrl: canvasUrl ?? '',
-                                    canvasId // Use the original ID
-                                });
-                                setCurrentCanvas(restoredCanvas);
-                                navigate({ to: `/canvases/${restoredCanvas.canvasId}` });
-                                toast.success("Canvas restored", {
-                                    description: `"${canvasName}" has been restored`,
-                                });
-                            } catch (error) {
-                                toast.error("Failed to restore canvas", {
-                                    description: "Please try again",
-                                });
-                            }
-                        },
-                    },
                 });
-
-                setDeleteDialogOpen(false);
-                setCanvasToDelete(null);
             } catch (error) {
                 toast.error("Failed to delete canvas", {
                     description: "Please try again",
