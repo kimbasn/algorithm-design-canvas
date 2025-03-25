@@ -1,8 +1,11 @@
 "use client"
 
+"use client"
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useCanvasContext } from '@/context/CanvasContext';
@@ -148,7 +151,11 @@ export function ImportCanvas() {
     const [open, setOpen] = useState(false);
     const [importResults, setImportResults] = useState<ImportResult[]>([]);
     const [availableCanvases, setAvailableCanvases] = useState<Canvas[]>([]);
+    const [importResults, setImportResults] = useState<ImportResult[]>([]);
+    const [availableCanvases, setAvailableCanvases] = useState<Canvas[]>([]);
     const { importCanvases } = useCanvasContext();
+    const [sorting, setSorting] = useState<SortingState>([]);
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
@@ -161,8 +168,11 @@ export function ImportCanvas() {
             const data = JSON.parse(text);
             setAvailableCanvases(data);
             setImportResults([]);
+            setAvailableCanvases(data);
+            setImportResults([]);
         } catch (error) {
             toast.error("Error", {
+                description: "Failed to read file. Please check the file format.",
                 description: "Failed to read file. Please check the file format.",
             });
         }
@@ -170,6 +180,64 @@ export function ImportCanvas() {
         // Reset the input
         event.target.value = '';
     };
+
+    const handleImport = async () => {
+        const selectedRows = table.getSelectedRowModel().rows;
+        if (selectedRows.length === 0) {
+            toast.error("Error", {
+                description: "Please select at least one canvas to import.",
+            });
+            return;
+        }
+
+        try {
+            const selectedData = selectedRows.map(row => row.original);
+            const { duplicates: duplicatesCanvases } = await importCanvases(selectedData);
+
+            // Create import results
+            const results: ImportResult[] = selectedData.map(canvas => {
+                const isDuplicate = duplicatesCanvases?.some(d => d.canvasId === canvas.canvasId);
+                return {
+                    canvasId: canvas.canvasId,
+                    problemName: canvas.problemName,
+                    status: isDuplicate ? 'failed' : 'success',
+                    message: isDuplicate ? 'Canvas already exists' : 'Successfully imported',
+                };
+            });
+
+            setImportResults(results);
+            setAvailableCanvases([]);
+        } catch (error) {
+            toast.error("Error", {
+                description: "Failed to import canvases. Please try again.",
+            });
+        }
+    };
+
+    const table = useReactTable({
+        data: availableCanvases,
+        columns,
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        state: {
+            sorting,
+            columnFilters,
+        },
+    });
+
+    const resultTable = useReactTable({
+        data: importResults,
+        columns: resultColumns,
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        state: {
+            sorting,
+        },
+    });
 
     const handleImport = async () => {
         const selectedRows = table.getSelectedRowModel().rows;
@@ -238,12 +306,176 @@ export function ImportCanvas() {
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-4xl">
                 <DialogHeader>
                     <DialogTitle>Import Canvases</DialogTitle>
                 </DialogHeader>
 
                 {importResults.length > 0 ? (
+                {importResults.length > 0 ? (
                     <div className="space-y-4">
+                        <div className="rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    {resultTable.getHeaderGroups().map((headerGroup) => (
+                                        <TableRow key={headerGroup.id}>
+                                            {headerGroup.headers.map((header) => (
+                                                <TableHead key={header.id}>
+                                                    {header.isPlaceholder
+                                                        ? null
+                                                        : flexRender(
+                                                            header.column.columnDef.header,
+                                                            header.getContext()
+                                                        )}
+                                                </TableHead>
+                                            ))}
+                                        </TableRow>
+                                    ))}
+                                </TableHeader>
+                                <TableBody>
+                                    {resultTable.getRowModel().rows?.length ? (
+                                        resultTable.getRowModel().rows.map((row) => (
+                                            <TableRow key={row.id}>
+                                                {row.getVisibleCells().map((cell) => (
+                                                    <TableCell key={cell.id}>
+                                                        {flexRender(
+                                                            cell.column.columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell
+                                                colSpan={resultColumns.length}
+                                                className="h-24 text-center"
+                                            >
+                                                No results.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                        <div className="flex justify-end">
+                            <Button onClick={() => {
+                                setImportResults([]);
+                                setOpen(false);
+                            }}>
+                                Close
+                            </Button>
+                        </div>
+                    </div>
+                ) : availableCanvases.length > 0 ? (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Input
+                                placeholder="Filter by problem name..."
+                                value={(table.getColumn("problemName")?.getFilterValue() as string) ?? ""}
+                                onChange={(event) =>
+                                    table.getColumn("problemName")?.setFilterValue(event.target.value)
+                                }
+                                className="max-w-sm"
+                            />
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setAvailableCanvases([]);
+                                    setOpen(false);
+                                }}
+                            >
+                                Clear
+                            </Button>
+                        </div>
+                        <div className="rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    {table.getHeaderGroups().map((headerGroup) => (
+                                        <TableRow key={headerGroup.id}>
+                                            {headerGroup.headers.map((header) => (
+                                                <TableHead key={header.id}>
+                                                    {header.isPlaceholder
+                                                        ? null
+                                                        : flexRender(
+                                                            header.column.columnDef.header,
+                                                            header.getContext()
+                                                        )}
+                                                </TableHead>
+                                            ))}
+                                        </TableRow>
+                                    ))}
+                                </TableHeader>
+                                <TableBody>
+                                    {table.getRowModel().rows?.length ? (
+                                        table.getRowModel().rows.map((row) => (
+                                            <TableRow
+                                                key={row.id}
+                                                data-state={row.getIsSelected() && "selected"}
+                                            >
+                                                {row.getVisibleCells().map((cell) => (
+                                                    <TableCell key={cell.id}>
+                                                        {flexRender(
+                                                            cell.column.columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell
+                                                colSpan={columns.length}
+                                                className="h-24 text-center"
+                                            >
+                                                No results.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1 text-sm text-muted-foreground">
+                                {table.getFilteredSelectedRowModel().rows.length} of{" "}
+                                {table.getFilteredRowModel().rows.length} row(s) selected.
+                            </div>
+                            <div className="space-x-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => table.previousPage()}
+                                    disabled={!table.getCanPreviousPage()}
+                                >
+                                    Previous
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => table.nextPage()}
+                                    disabled={!table.getCanNextPage()}
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setAvailableCanvases([]);
+                                    setOpen(false);
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button onClick={handleImport}>
+                                Import Selected
+                            </Button>
+                        </div>
                         <div className="rounded-md border">
                             <Table>
                                 <TableHeader>
