@@ -62,7 +62,7 @@ export default function CanvasSection({ title, icon }: CanvasIdeasSectionProps) 
                 </Button>
             </div>
             {isExpanded && (
-                <>
+                <div className="flex flex-col overflow-hidden">
                     <div className="grid grid-cols-2 border-b">
                         <div className="text-gray-900 dark:text-gray-100">Description</div>
                         <div className="text-gray-900 dark:text-gray-100">Complexities</div>
@@ -121,7 +121,7 @@ export default function CanvasSection({ title, icon }: CanvasIdeasSectionProps) 
                             </div>
                         </div>
                     ))}
-                </>
+                </div>
             )}
         </div>
     );

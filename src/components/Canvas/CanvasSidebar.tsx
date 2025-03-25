@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useCanvasContext } from '@/context/CanvasContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Sidebar,
     SidebarContent,
@@ -56,6 +56,17 @@ export default function CanvasSidebar() {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setSearchQuery('');
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     // Filter canvases based on search query
     const filteredCanvases = canvases.filter(canvas =>
@@ -163,7 +174,7 @@ export default function CanvasSidebar() {
                             className="pl-9"
                         />
                     </div>
-                    
+
                 </div>
 
                 <SidebarContent className="flex-1 overflow-y-auto">
@@ -184,7 +195,7 @@ export default function CanvasSidebar() {
                                         <TooltipTrigger asChild>
                                             <div className="flex-1 min-w-0">
                                                 <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                                                    {canvas.problemName.slice(0, 20)}
+                                                    {canvas.problemName.slice(0, 20)}...
                                                 </div>
                                                 <div className="text-sm text-gray-500 dark:text-gray-400">
                                                     Updated {new Date(canvas.updatedAt).toLocaleDateString()}
@@ -196,9 +207,16 @@ export default function CanvasSidebar() {
                                         </TooltipContent>
                                     </Tooltip>
                                 ) : (
-                                    canvas.problemName
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                                                {canvas.problemName}
+                                            </div>
+                                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                Updated {new Date(canvas.updatedAt).toLocaleDateString()}
+                                            </div>
+                                        </div>
                                 )}
-                                
+
                                 <SidebarMenuAction>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
