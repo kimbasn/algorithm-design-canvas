@@ -377,7 +377,7 @@ export function ExportCanvas() {
                             >
                                 Cancel
                             </Button>
-                            <Button onClick={handleExport}>
+                            <Button onClick={handleExport} disabled={table.getFilteredSelectedRowModel().rows.length === 0}>
                                 Export Selected
                             </Button>
                         </div>
