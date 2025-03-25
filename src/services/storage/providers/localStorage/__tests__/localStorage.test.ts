@@ -1,7 +1,7 @@
 import { StorageType } from '@/types/storage'
 import { LocalStorageProvider } from '../localStorage'
-import { type Canvas, type CreateCanvas, type CreateIdea } from '@/types/canvas'
-import { CanvasNotFoundError } from '@/errors'
+import { type Canvas, type CreateCanvas, type CreateIdea, createEmptyCanvas } from '@/types/canvas'
+import { CanvasNotFoundError, StorageNotInitializedError } from '@/errors'
 // import { STORAGE_KEYS } from '../constants'
 
 describe('LocalStorageProvider', () => {
@@ -324,6 +324,181 @@ describe('LocalStorageProvider', () => {
             })
           ])
         })
+      })
+    })
+  })
+
+  describe('Import/Export Operations', () => {
+    it('should export canvases with correct structure', async () => {
+      // Create test canvases
+      const canvas1 = await createTestCanvas({ problemName: 'Problem 1' })
+      const canvas2 = await createTestCanvas({ problemName: 'Problem 2' })
+
+      // Export canvases
+      const exported = await provider.exportCanvases()
+
+      // Verify exported data
+      expect(exported).toHaveLength(2)
+      expect(exported).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            canvasId: canvas1.canvasId,
+            problemName: 'Problem 1'
+          }),
+          expect.objectContaining({
+            canvasId: canvas2.canvasId,
+            problemName: 'Problem 2'
+          })
+        ])
+      )
+
+      // Verify dates are properly serialized
+      exported.forEach(canvas => {
+        expect(canvas.createdAt).toBeInstanceOf(Date)
+        expect(canvas.updatedAt).toBeInstanceOf(Date)
+      })
+    })
+
+    it('should import canvases and handle duplicates', async () => {
+      // Create initial canvas
+      const originalCanvas = await createTestCanvas({ problemName: 'Original Problem' })
+
+      // Prepare canvases to import
+      const canvasesToImport = [
+        // Duplicate by ID
+        {
+          ...createEmptyCanvas(),
+          canvasId: originalCanvas.canvasId,
+          problemName: 'Duplicate ID Problem'
+        },
+        // Duplicate by name
+        {
+          ...createEmptyCanvas(),
+          problemName: 'Original Problem'
+        },
+        // New unique canvas
+        {
+          ...createEmptyCanvas(),
+          problemName: 'New Problem'
+        }
+      ]
+
+      // Import canvases
+      const result = await provider.importCanvases(canvasesToImport)
+
+      // Verify results
+      expect(result.imported).toHaveLength(1)
+      expect(result.imported[0].problemName).toBe('New Problem')
+      
+      expect(result.duplicates).toHaveLength(2)
+      expect(result.duplicates).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            original: expect.objectContaining({
+              canvasId: originalCanvas.canvasId,
+              problemName: 'Original Problem'
+            }),
+            duplicate: expect.objectContaining({
+              canvasId: originalCanvas.canvasId,
+              problemName: 'Duplicate ID Problem'
+            })
+          }),
+          expect.objectContaining({
+            original: expect.objectContaining({
+              problemName: 'Original Problem'
+            }),
+            duplicate: expect.objectContaining({
+              problemName: 'Original Problem'
+            })
+          })
+        ])
+      )
+
+      // Verify only new canvas was added
+      const allCanvases = await provider.getCanvases()
+      expect(allCanvases).toHaveLength(2)
+      expect(allCanvases).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            canvasId: originalCanvas.canvasId,
+            problemName: 'Original Problem'
+          }),
+          expect.objectContaining({
+            problemName: 'New Problem'
+          })
+        ])
+      )
+    })
+
+    it('should handle empty import array', async () => {
+      const result = await provider.importCanvases([])
+      
+      expect(result.imported).toHaveLength(0)
+      expect(result.duplicates).toHaveLength(0)
+    })
+
+    it('should properly cleanup storage state', async () => {
+      // Create a canvas
+      await createTestCanvas({ problemName: 'Test Problem' })
+      
+      // Verify initial state
+      expect(provider.isReady).toBe(true)
+      const initialCanvases = await provider.getCanvases()
+      expect(initialCanvases).toHaveLength(1)
+      
+      // Cleanup
+      await provider.cleanup()
+      
+      // Verify cleanup state
+      expect(provider.isReady).toBe(false)
+      await expect(provider.getCanvases()).rejects.toThrow(StorageNotInitializedError)
+      
+      // Verify storage is cleared by trying to create a new canvas
+      await expect(provider.createCanvas({
+        problemName: 'New Problem',
+        problemUrl: 'https://test.com'
+      })).rejects.toThrow(StorageNotInitializedError)
+    })
+
+    it('should preserve canvas data during import/export cycle', async () => {
+      // Create a complex canvas with ideas
+      const canvas = await createTestCanvas({ problemName: 'Complex Problem' })
+      await provider.addIdea(canvas.canvasId, {
+        description: 'Test Idea',
+        timeComplexity: 'O(n)',
+        spaceComplexity: 'O(1)'
+      })
+
+      // Export canvases
+      const exported = await provider.exportCanvases()
+
+      // Clear storage
+      await provider.cleanup()
+
+      // Reinitialize the provider
+      provider = new LocalStorageProvider()
+      // Wait for initialization by calling a public method
+      await provider.getCanvases()
+
+      // Import exported canvases
+      const result = await provider.importCanvases(exported)
+
+      // Verify import results
+      expect(result.imported).toHaveLength(1)
+      expect(result.duplicates).toHaveLength(0)
+
+      // Verify imported canvas matches original
+      const importedCanvas = await provider.getCanvas(canvas.canvasId)
+      expect(importedCanvas).toMatchObject({
+        canvasId: canvas.canvasId,
+        problemName: 'Complex Problem',
+        ideas: expect.arrayContaining([
+          expect.objectContaining({
+            description: 'Test Idea',
+            timeComplexity: 'O(n)',
+            spaceComplexity: 'O(1)'
+          })
+        ])
       })
     })
   })

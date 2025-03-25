@@ -4,7 +4,6 @@ import {
   StorageNotInitializedError,
   StorageOperationError,
   CanvasNotFoundError,
-  SerializationError,
 } from '@/errors'
 import { 
   type Canvas, 
@@ -14,9 +13,10 @@ import {
   type CreateIdea, 
   type UpdateIdea, 
   createEmptyCanvas,
-  emptyIdea
+  createEmptyIdea,
 } from '@/types/canvas'
 import { STORAGE_KEYS } from './constants'
+import { debounce } from 'lodash'
 
 
 class LocalStorage implements BaseStorage {
@@ -37,11 +37,22 @@ class LocalStorage implements BaseStorage {
   }
 }
 
+/**
+ * LocalStorageProvider implements the StorageProvider interface
+ * using browser's localStorage with in-memory caching for better performance.
+ * 
+ * Features:
+ * - In-memory caching of canvases
+ * - Debounced storage updates
+ * - Retry mechanism for failed operations
+ * - Type-safe operations
+ */
 export class LocalStorageProvider implements StorageProvider {
   readonly type = StorageType.LOCAL
   private storage: BaseStorage
   private initializationPromise: Promise<void>
   private _isReady: boolean = false
+  private canvases: Canvas[] = [] // In-memory cache of canvases
 
   get isReady(): boolean {
     return this._isReady
@@ -51,33 +62,35 @@ export class LocalStorageProvider implements StorageProvider {
     this.storage = new LocalStorage()
     this.initializationPromise = this.initialize()
   }
-  
 
   private async initialize(): Promise<void> {
-  try {
-    await Promise.all([
-      this.initializeCanvases(),
-      this.initializeLastEdited()
-    ])
-    this._isReady = true
-  } catch (error) {
-    throw new StorageInitializationError(undefined, error)
+    try {
+      await Promise.all([
+        this.initializeCanvases(),
+        this.initializeLastEdited()
+      ])
+      this._isReady = true
+    } catch (error) {
+      throw new StorageInitializationError(undefined, error)
+    }
   }
-}
 
   private async initializeCanvases(): Promise<void> {
-  const hasData = await this.storage.get(STORAGE_KEYS.CANVAS_DATA)
-  if (!hasData) {
-    await this.storage.set(STORAGE_KEYS.CANVAS_DATA, JSON.stringify([]))
+    const storedData = await this.storage.get(STORAGE_KEYS.CANVAS_DATA)
+    if (!storedData) {
+      this.canvases = []
+      await this.storage.set(STORAGE_KEYS.CANVAS_DATA, JSON.stringify([]))
+    } else {
+      this.canvases = JSON.parse(storedData).map(this.convertDates)
+    }
   }
-}
 
-private async initializeLastEdited(): Promise<void> {
-  const hasLastEdited = await this.storage.get(STORAGE_KEYS.LAST_EDITED_CANVAS)
-  if (!hasLastEdited) {
-    await this.storage.set(STORAGE_KEYS.LAST_EDITED_CANVAS, '')
+  private async initializeLastEdited(): Promise<void> {
+    const hasLastEdited = await this.storage.get(STORAGE_KEYS.LAST_EDITED_CANVAS)
+    if (!hasLastEdited) { // TODO: find most recently updated canvas
+      await this.storage.set(STORAGE_KEYS.LAST_EDITED_CANVAS, '')
+    }
   }
-}
 
   // Helper methods
   private async ensureInitialized(): Promise<void> {
@@ -86,52 +99,186 @@ private async initializeLastEdited(): Promise<void> {
       throw new StorageNotInitializedError()
     }
   }
-  private async getCanvasOrThrow(id: string): Promise<Canvas> {
-    const canvas = await this.getCanvas(id)
+
+  private getCanvasOrThrow(id: string): Canvas {
+    const canvas = this.canvases.find(c => c.canvasId === id)
     if (!canvas) throw new CanvasNotFoundError(id)
     return canvas
-  } 
-  private convertDates(canvas: Canvas): Canvas {
-  return {
-    ...canvas,
-    createdAt: new Date(canvas.createdAt),
-    updatedAt: new Date(canvas.updatedAt)
   }
-}
 
-  private async getData<T>(key: string): Promise<T | null> {
-    try {
-      const data = await this.storage.get(key)
-      return data ? JSON.parse(data) : null
-    } catch (error) {
-      if (error instanceof SyntaxError) {
-        throw new SerializationError('deserialize', error)
-      }
-      throw new StorageOperationError('read', 'data', key, error)
+  private convertDates(canvas: Canvas): Canvas {
+    return {
+      ...canvas,
+      createdAt: new Date(canvas.createdAt),
+      updatedAt: new Date(canvas.updatedAt)
     }
   }
 
-  private async setData<T>(key: string, value: T): Promise<void> {
+  // private async getData<T>(key: string): Promise<T | null> {
+  //   try {
+  //     const data = await this.storage.get(key)
+  //     return data ? JSON.parse(data) : null
+  //   } catch (error) {
+  //     if (error instanceof SyntaxError) {
+  //       throw new SerializationError('deserialize', error)
+  //     }
+  //     throw new StorageOperationError('read', 'data', key, error)
+  //   }
+  // }
+
+  // private async setData<T>(key: string, value: T): Promise<void> {
+  //   try {
+  //     await this.storage.set(key, JSON.stringify(value))
+  //   } catch (error) {
+  //     throw new StorageOperationError('write', 'data', key, error)
+  //   }
+  // }
+
+  private async setDataWithRetry<T>(key: string, value: T, retries = 3): Promise<void> {
+    for (let i = 0; i < retries; i++) {
+      try {
+        await this.storage.set(key, JSON.stringify(value))
+        return
+      } catch (error) {
+        if (i === retries - 1) throw error
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, i)))
+      }
+    }
+  }
+
+  private async saveToStorage(): Promise<void> {
+    await this.setDataWithRetry(STORAGE_KEYS.CANVAS_DATA, this.canvases)
+  }
+
+  private debouncedSave = debounce(async () => {
+    await this.saveToStorage()
+  }, 1000)
+
+  // private validateCanvas(canvas: Canvas): void {
+  //   if (!canvas.canvasId) { // TODO: check if canvasId is a valid UUID
+  //     throw new StorageOperationError('create', 'canvas', 'Canvas ID is required')
+  //   }
+  //   if (!canvas.problemName) {
+  //     throw new StorageOperationError('create', 'canvas', 'Problem name is required')
+  //   }
+  //   if (!(canvas.createdAt instanceof Date)) {
+  //     throw new StorageOperationError('create', 'canvas', 'Invalid creation date')
+  //   }
+  //   if (!(canvas.updatedAt instanceof Date)) {
+  //     throw new StorageOperationError('create', 'canvas', 'Invalid update date')
+  //   }
+  // }
+
+  async updateCanvas(id: string, updates: UpdateCanvas): Promise<void> {
+    await this.ensureInitialized()
+    this.getCanvasOrThrow(id)
+
+    // Add a small delay to ensure the new timestamp is greater
+    await new Promise(resolve => setTimeout(resolve, 1))
+
+    this.canvases = this.canvases.map(c => 
+      c.canvasId === id ? { 
+        ...c, 
+        ...updates, 
+        updatedAt: new Date(),
+        constraints: updates.constraints ?? c.constraints,
+        code: updates.code ?? c.code,
+        testCases: updates.testCases ?? c.testCases,
+      } : c
+    )
+
+    this.debouncedSave()
+    await this.setLastEditedCanvasId(id)
+  }
+
+  async cleanup(): Promise<void> {
     try {
-      await this.storage.set(key, JSON.stringify(value))
+      this.canvases = []
+      this._isReady = false
+      this.debouncedSave.cancel() // Cancel any pending saves
+      await this.storage.clear()
     } catch (error) {
-      throw new StorageOperationError('write', 'data', key, error)
+      throw new StorageOperationError('cleanup', 'storage', undefined, error)
     }
   }
 
   // Canvas Operations
   async getCanvases(): Promise<Canvas[] | null> {
     await this.ensureInitialized()
-    const canvases = await this.getData<Canvas[]>(STORAGE_KEYS.CANVAS_DATA)
-    if (!canvases) return null
-    return canvases.map(this.convertDates)
+    return this.canvases
+  }
+
+  async importCanvases(canvases: Canvas[]): Promise<{
+    imported: Canvas[],
+    duplicates: Array<{
+      original: Canvas,
+      duplicate: Canvas
+    }>
+  }> {
+    await this.ensureInitialized()
+    
+    const result = {
+      imported: [] as Canvas[],
+      duplicates: [] as Array<{ original: Canvas, duplicate: Canvas }>
+    }
+
+    for (const canvas of canvases) { // TODO: Validate canvas
+      const newCanvas = {
+        ...createEmptyCanvas(),
+        ...canvas,
+        canvasId: canvas.canvasId ?? createEmptyCanvas().canvasId
+      }
+
+      // Check for duplicates by canvasId
+      const existingCanvas = this.canvases.find(c => c.canvasId === newCanvas.canvasId)
+      
+      if (existingCanvas) {
+        result.duplicates.push({
+          original: existingCanvas,
+          duplicate: newCanvas
+        })
+        continue
+      }
+
+      // Check for potential duplicates by problem name
+      const nameDuplicate = this.canvases.find(c => 
+        c.problemName.toLowerCase() === newCanvas.problemName.toLowerCase()
+      )
+
+      if (nameDuplicate) {
+        result.duplicates.push({
+          original: nameDuplicate,
+          duplicate: newCanvas
+        })
+        continue
+      }
+
+      // If no duplicates found, add to canvases
+      this.canvases.push(newCanvas)
+      result.imported.push(newCanvas)
+    }
+
+    // Only save if we actually imported something
+    if (result.imported.length > 0) {
+      this.debouncedSave()
+    }
+
+    return result
+  }
+
+  async exportCanvases(): Promise<Canvas[]> {
+    await this.ensureInitialized()
+    return this.canvases.map(canvas => ({
+      ...canvas,
+      createdAt: new Date(canvas.createdAt),
+      updatedAt: new Date(canvas.updatedAt)
+    }))
   }
 
   async getCanvas(id: string): Promise<Canvas | null> {
     await this.ensureInitialized()
-    const canvases = await this.getCanvases()
-    if (!canvases) return null
-    return canvases.find(c => c.canvasId === id) || null
+    return this.canvases.find(c => c.canvasId === id) || null
   }
 
   async createCanvas(data: CreateCanvas): Promise<Canvas> {
@@ -143,14 +290,13 @@ private async initializeLastEdited(): Promise<void> {
         canvasId: data.canvasId ?? createEmptyCanvas().canvasId,
       }
 
-      const canvases = await this.getCanvases() || []
-      
       // Check if the canvas ID already exists
-      if (canvases.some(c => c.canvasId === newCanvas.canvasId)) {
-        throw new StorageOperationError('create', 'canvas', undefined, new Error('Canvas ID already exists'));
+      if (this.canvases.some(c => c.canvasId === newCanvas.canvasId)) {
+        throw new StorageOperationError('create', 'canvas', undefined, new Error('Canvas ID already exists'))
       }
 
-      await this.setData(STORAGE_KEYS.CANVAS_DATA, [...canvases, newCanvas])
+      this.canvases = [...this.canvases, newCanvas]
+      this.debouncedSave()
       await this.setLastEditedCanvasId(newCanvas.canvasId)
       return newCanvas
     } catch (error) {
@@ -158,41 +304,12 @@ private async initializeLastEdited(): Promise<void> {
     }
   }
 
-  async updateCanvas(id: string, updates: UpdateCanvas): Promise<void> {
-    await this.ensureInitialized()
-    await this.getCanvasOrThrow(id)
-
-    const canvases = await this.getCanvases()
-    if (!canvases) throw new StorageOperationError('read', 'canvases')
-  
-    // Add a small delay to ensure the new timestamp is greater
-    await new Promise(resolve => setTimeout(resolve, 1))
-  
-    const updatedCanvases = canvases.map(c => 
-      c.canvasId === id ? { 
-        ...c, 
-        ...updates, 
-        updatedAt: new Date(),
-        // Preserve existing fields if not provided in updates
-        constraints: updates.constraints ?? c.constraints,
-        code: updates.code ?? c.code,
-        testCases: updates.testCases ?? c.testCases,
-      } : c
-    )
-
-    await this.setData(STORAGE_KEYS.CANVAS_DATA, updatedCanvases)
-    await this.setLastEditedCanvasId(id)
-  }
-
   async deleteCanvas(id: string): Promise<void> {
     await this.ensureInitialized()
-    await this.getCanvasOrThrow(id)
+    this.getCanvasOrThrow(id)
 
-    const canvases = await this.getCanvases()
-    if (!canvases) throw new StorageOperationError('read', 'canvases')
-
-    const filteredCanvases = canvases.filter(canvas => canvas.canvasId !== id)
-    await this.setData(STORAGE_KEYS.CANVAS_DATA, filteredCanvases)
+    this.canvases = this.canvases.filter(canvas => canvas.canvasId !== id)
+    this.debouncedSave()
 
     // Clean up last edited canvas if it was the deleted one
     const lastEdited = await this.getLastEditedCanvasId()
@@ -210,75 +327,64 @@ private async initializeLastEdited(): Promise<void> {
 
   async addIdea(canvasId: string, idea: CreateIdea): Promise<void> {
     await this.ensureInitialized()
-    const canvas = await this.getCanvasOrThrow(canvasId)
-    
-    const canvases = await this.getCanvases()
-    if (!canvases) throw new StorageOperationError('read', 'canvases')
+    this.getCanvasOrThrow(canvasId)
       
     const newIdea: Idea = {
-      ...emptyIdea,
+      ...createEmptyIdea(),
       ...idea,
     }
 
-    const updatedCanvas = {
-      ...canvas,
-      ideas: [...canvas.ideas, newIdea],
-      updatedAt: new Date()
-    }
-
-    const updatedCanvases = canvases.map(c => 
-      c.canvasId === canvasId ? updatedCanvas : c
+    this.canvases = this.canvases.map(c => 
+      c.canvasId === canvasId ? {
+        ...c,
+        ideas: [...c.ideas, newIdea],
+        updatedAt: new Date()
+      } : c
     )
 
-
-    await this.setData(STORAGE_KEYS.CANVAS_DATA, updatedCanvases)  
+    this.debouncedSave()
     await this.setLastEditedCanvasId(canvasId)
   }
 
   async updateIdea(canvasId: string, ideaId: string, updates: UpdateIdea): Promise<void> {
     await this.ensureInitialized()
-    await this.getCanvasOrThrow(canvasId)
+    this.getCanvasOrThrow(canvasId)
 
-    const canvases = await this.getCanvases()
-    if (!canvases) throw new StorageOperationError('read', 'canvases')
-    const updatedCanvases = canvases.map(canvas => {
-        if (canvas.canvasId === canvasId) {
-          return {
-            ...canvas,
-            ideas: canvas.ideas.map(idea => 
-              idea.ideaId === ideaId 
-                ? { ...idea, ...updates }
-                : idea
-            ),
-            updatedAt: new Date()
-          }
+    this.canvases = this.canvases.map(canvas => {
+      if (canvas.canvasId === canvasId) {
+        return {
+          ...canvas,
+          ideas: canvas.ideas.map(idea => 
+            idea.ideaId === ideaId 
+              ? { ...idea, ...updates }
+              : idea
+          ),
+          updatedAt: new Date()
         }
-        return canvas
+      }
+      return canvas
     })
     
-    await this.setData(STORAGE_KEYS.CANVAS_DATA, updatedCanvases)
+    this.debouncedSave()
     await this.setLastEditedCanvasId(canvasId)
   }
 
   async deleteIdea(canvasId: string, ideaId: string): Promise<void> {
     await this.ensureInitialized()
-    await this.getCanvasOrThrow(canvasId)
+    this.getCanvasOrThrow(canvasId)
 
-    const canvases = await this.getCanvases()
-    if (!canvases) throw new StorageOperationError('read', 'canvases')
-
-    const updatedCanvases = canvases.map(canvas => {
-        if (canvas.canvasId === canvasId) {
-          return {
-            ...canvas,
-            ideas: canvas.ideas.filter(idea => idea.ideaId !== ideaId),
-            updatedAt: new Date()
-          }
+    this.canvases = this.canvases.map(canvas => {
+      if (canvas.canvasId === canvasId) {
+        return {
+          ...canvas,
+          ideas: canvas.ideas.filter(idea => idea.ideaId !== ideaId),
+          updatedAt: new Date()
+        }
       }
       return canvas
     })
 
-    await this.setData(STORAGE_KEYS.CANVAS_DATA, updatedCanvases)
+    this.debouncedSave()
     await this.setLastEditedCanvasId(canvasId)
   }
 
@@ -291,7 +397,7 @@ private async initializeLastEdited(): Promise<void> {
   async setLastEditedCanvasId(id: string): Promise<void> {
     await this.ensureInitialized()
     if (id !== '') {
-      await this.getCanvasOrThrow(id)
+      this.getCanvasOrThrow(id)
     }
     try {
       await this.storage.set(STORAGE_KEYS.LAST_EDITED_CANVAS, id)

@@ -4,14 +4,16 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
+import { useCanvasContext } from "@/context/CanvasContext";
 interface CanvasSectionProps {
-    title: string;
+    sectionName: "constraints" | "testCases";
     placeholder: string;
     icon?: React.ReactNode;
 }
 
-export default function CanvasSection({ title, placeholder, icon }: CanvasSectionProps) {
+export default function CanvasSection({ sectionName, placeholder, icon }: CanvasSectionProps) {
     const [isExpanded, setIsExpanded] = useState(true);
+    const { currentCanvas, updateCanvas } = useCanvasContext();
 
     return (
         <div className={cn(
@@ -26,7 +28,7 @@ export default function CanvasSection({ title, placeholder, icon }: CanvasSectio
             )}>
                 <div className="flex items-center gap-2">
                     {icon || <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
-                    <span className="text-gray-900 dark:text-gray-100">{title}</span>
+                    <span className="text-gray-900 dark:text-gray-100">{sectionName}</span>
                 </div>
                 <Button
                     variant="ghost"
@@ -54,6 +56,12 @@ export default function CanvasSection({ title, placeholder, icon }: CanvasSectio
                         "focus:bg-gray-50/50 dark:focus:bg-[#1f2937]/50"
                     )}
                     data-placeholder={placeholder}
+                    value={currentCanvas?.[sectionName]}
+                    onChange={(e) => {
+                        if (currentCanvas?.canvasId) {
+                            updateCanvas(currentCanvas.canvasId, { [sectionName]: e.target.value });
+                        }
+                    }}
                 />
             )}
         </div>

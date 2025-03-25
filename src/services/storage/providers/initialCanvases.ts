@@ -1,6 +1,6 @@
-import { type Canvas } from '@/types/canvas';
+import { type Canvas, Language } from '@/types/canvas';
 
-export const initialCanvases: Canvas[] = [
+export const testCanvases: Canvas[] = [
     {
         canvasId: "1",
         problemName: "Two Sum",
@@ -13,7 +13,8 @@ export const initialCanvases: Canvas[] = [
         testCases: "Input: [2, 7, 11, 15], target = 9; Output: [0, 1]",
         code: "function twoSum(nums, target) { /* implementation */ }",
         createdAt: new Date("2025-03-17T10:00:00Z"),
-        updatedAt: new Date("2025-03-17T10:00:00Z")
+        updatedAt: new Date("2025-03-17T10:00:00Z"),
+        language: Language.PYTHON
     },
     {
         canvasId: "2",
@@ -27,7 +28,8 @@ export const initialCanvases: Canvas[] = [
         testCases: "Input: [1, 2, 3, 4, 5]; Output: [5, 4, 3, 2, 1]",
         code: "function reverseList(head) { /* implementation */ }",
         createdAt: new Date("2025-03-17T10:05:00Z"),
-        updatedAt: new Date("2025-03-17T10:05:00Z")
+        updatedAt: new Date("2025-03-17T10:05:00Z"),
+        language: Language.PYTHON
     },
     {
         canvasId: "3",
@@ -40,7 +42,8 @@ export const initialCanvases: Canvas[] = [
         testCases: "Input: '()[]{}'; Output: true",
         code: "function isValid(s) { /* implementation */ }",
         createdAt: new Date("2025-03-17T10:10:00Z"),
-        updatedAt: new Date("2025-03-17T10:10:00Z")
+        updatedAt: new Date("2025-03-17T10:10:00Z"),
+        language: Language.PYTHON
     },
     {
         canvasId: "4",
@@ -54,7 +57,8 @@ export const initialCanvases: Canvas[] = [
         testCases: "Input: [1, 2, 4], [1, 3, 4]; Output: [1, 1, 2, 3, 4, 4]",
         code: "function mergeTwoLists(l1, l2) { /* implementation */ }",
         createdAt: new Date("2025-03-17T10:15:00Z"),
-        updatedAt: new Date("2025-03-17T10:15:00Z")
+        updatedAt: new Date("2025-03-17T10:15:00Z"),
+        language: Language.PYTHON
     },
     {
         canvasId: "5",
@@ -67,7 +71,8 @@ export const initialCanvases: Canvas[] = [
         testCases: "Input: [7, 1, 5, 3, 6, 4]; Output: 5",
         code: "function maxProfit(prices) { /* implementation */ }",
         createdAt: new Date("2025-03-17T10:20:00Z"),
-        updatedAt: new Date("2025-03-17T10:20:00Z")
+        updatedAt: new Date("2025-03-17T10:20:00Z"),
+        language: Language.PYTHON
     },
     {
         canvasId: "6",
@@ -80,7 +85,8 @@ export const initialCanvases: Canvas[] = [
         testCases: "Input: [-2,1,-3,4,-1,2,1,-5,4]; Output: 6",
         code: "function maxSubArray(nums) { /* implementation */ }",
         createdAt: new Date("2025-03-17T10:25:00Z"),
-        updatedAt: new Date("2025-03-17T10:25:00Z")
+        updatedAt: new Date("2025-03-17T10:25:00Z"),
+        language: Language.PYTHON
     },
     {
         canvasId: "7",
@@ -93,7 +99,8 @@ export const initialCanvases: Canvas[] = [
         testCases: "Input: 3; Output: 3",
         code: "function climbStairs(n) { /* implementation */ }",
         createdAt: new Date("2025-03-17T10:30:00Z"),
-        updatedAt: new Date("2025-03-17T10:30:00Z")
+        updatedAt: new Date("2025-03-17T10:30:00Z"),
+        language: Language.PYTHON
     },
     {
         canvasId: "8",
@@ -107,7 +114,8 @@ export const initialCanvases: Canvas[] = [
         testCases: "Input: 'babad'; Output: 'bab'",
         code: "function longestPalindrome(s) { /* implementation */ }",
         createdAt: new Date("2025-03-17T10:35:00Z"),
-        updatedAt: new Date("2025-03-17T10:35:00Z")
+        updatedAt: new Date("2025-03-17T10:35:00Z"),
+        language: Language.PYTHON
     },
     {
         canvasId: "9",
@@ -120,7 +128,8 @@ export const initialCanvases: Canvas[] = [
         testCases: "Input: [1,8,6,2,5,4,8,3,7]; Output: 49",
         code: "function maxArea(height) { /* implementation */ }",
         createdAt: new Date("2025-03-17T10:40:00Z"),
-        updatedAt: new Date("2025-03-17T10:40:00Z")
+        updatedAt: new Date("2025-03-17T10:40:00Z"),
+        language: Language.PYTHON
     },
     {
         canvasId: "10",
@@ -133,6 +142,7 @@ export const initialCanvases: Canvas[] = [
         testCases: "Input: [[1,3],[2,6],[8,10],[15,18]]; Output: [[1,6],[8,10],[15,18]]",
         code: "function merge(intervals) { /* implementation */ }",
         createdAt: new Date("2025-03-17T10:45:00Z"),
-        updatedAt: new Date("2025-03-17T10:15:00Z")
+        updatedAt: new Date("2025-03-17T10:15:00Z"),
+        language: Language.PYTHON
     }
 ];

@@ -1,10 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, Pause, RotateCcw } from "lucide-react";
-import { useState, useRef } from "react";
+import { RotateCcw } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Editor from "@monaco-editor/react";
+import * as monaco from "monaco-editor";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
+
+import { Language } from "@/types/canvas";
+import { useCanvasContext } from "@/context/CanvasContext";
 
 const languages = [
     { value: "javascript", label: "JavaScript" },
@@ -25,25 +29,62 @@ const languages = [
 ];
 
 export default function CodeEditor() {
-    const [language, setLanguage] = useState("javascript");
-    const [code, setCode] = useState("");
-    const [isRunning, setIsRunning] = useState(false);
-    const editorRef = useRef(null);
+    const { currentCanvas, updateCanvas } = useCanvasContext();
+    const [language, setLanguage] = useState<Language>(() => {
+        const canvasLang = currentCanvas?.language;
+        return canvasLang && Object.values(Language).includes(canvasLang as Language)
+            ? canvasLang as Language
+            : Language.PYTHON;
+    });
+    // const [isRunning, setIsRunning] = useState(false);
+    // const [isLoading, setIsLoading] = useState(false);
+    const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
     const { theme } = useTheme();
 
-    const handleRun = () => {
-        setIsRunning(true);
-        // TODO: Implement code execution logic
-        setTimeout(() => setIsRunning(false), 1000);
-    };
+    // const handleRun = async () => {
+    //     if (!currentCanvas?.canvasId) return;
 
-    const handleEditorMount = (editor: any) => {
+    //     setIsRunning(true);
+    //     setIsLoading(true);
+    //     try {
+    //         // TODO: Implement code execution logic
+    //         await new Promise(resolve => setTimeout(resolve, 1000));
+    //     } catch (error) {
+    //         console.error('Code execution failed:', error);
+    //     } finally {
+    //         setIsRunning(false);
+    //         setIsLoading(false);
+    //     }
+    // };
+
+    const handleEditorMount = useCallback((editor: monaco.editor.IStandaloneCodeEditor) => {
         editorRef.current = editor;
-    };
+    }, []);
 
-    const handleEditorChange = (value: string | undefined) => {
-        setCode(value || "");
-    };
+    const handleEditorChange = useCallback((value: string | undefined) => {
+        if (!currentCanvas?.canvasId) return;
+        try {
+            updateCanvas(currentCanvas.canvasId, { code: value || "" });
+        } catch (error) {
+            console.error('Failed to update code:', error);
+        }
+    }, [currentCanvas?.canvasId, updateCanvas]);
+
+    const handleReset = useCallback(() => {
+        if (editorRef.current) {
+            editorRef.current.setValue('');
+            handleEditorChange('');
+        }
+    }, [handleEditorChange]);
+
+    useEffect(() => {
+        if (!currentCanvas?.canvasId) return;
+        try {
+            updateCanvas(currentCanvas.canvasId, { language });
+        } catch (error) {
+            console.error('Failed to update language:', error);
+        }
+    }, [language, currentCanvas?.canvasId, updateCanvas]);
 
     return (
         <div className={cn(
@@ -58,12 +99,15 @@ export default function CodeEditor() {
                 "bg-gray-50/50 dark:bg-gray-800/50"
             )}>
                 <div className="flex items-center gap-4">
-                    <Select value={language} onValueChange={setLanguage}>
+                    <Select
+                        value={language}
+                        onValueChange={(value) => setLanguage(value as Language)}
+                    >
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Select language" />
                         </SelectTrigger>
                         <SelectContent>
-                            {languages.map((lang) => (
+                            {languages.sort((a, b) => a.label.localeCompare(b.label)).map((lang) => (
                                 <SelectItem key={lang.value} value={lang.value}>
                                     {lang.label}
                                 </SelectItem>
@@ -72,11 +116,11 @@ export default function CodeEditor() {
                     </Select>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button
+                    {/* <Button
                         variant="ghost"
                         size="icon"
                         onClick={handleRun}
-                        disabled={isRunning}
+                        disabled={isRunning || isLoading}
                         className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                         {isRunning ? (
@@ -84,11 +128,11 @@ export default function CodeEditor() {
                         ) : (
                             <Play className="h-4 w-4" />
                         )}
-                    </Button>
+                    </Button> */}
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setCode('')}
+                        onClick={handleReset}
                         className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                         <RotateCcw className="h-4 w-4" />
@@ -99,8 +143,8 @@ export default function CodeEditor() {
                 <Editor
                     height="100%"
                     width="100%"
-                    defaultLanguage={language}
-                    defaultValue={code}
+                    language={language}
+                    value={currentCanvas?.code}
                     theme={theme === "dark" ? "vs-dark" : "light"}
                     onMount={handleEditorMount}
                     onChange={handleEditorChange}
@@ -123,13 +167,12 @@ export default function CodeEditor() {
                             horizontalScrollbarSize: 10,
                             arrowSize: 30,
                         },
-                        // Theme-specific options
                         ...(theme === "dark" ? {
-                            backgroundColor: "#1f2937", // dark:bg-gray-800
-                            foreground: "#f3f4f6", // dark:text-gray-100
+                            backgroundColor: "#1f2937",
+                            foreground: "#f3f4f6",
                         } : {
                             backgroundColor: "#ffffff",
-                            foreground: "#111827", // text-gray-900
+                            foreground: "#111827",
                         }),
                     }}
                 />

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Minus, Save } from "lucide-react";
 
 import CanvasSection from './CanvasSection';
+import IdeasSection from './IdeasSection';
 import CodeEditor from './CodeEditor';
 import { cn } from '@/lib/utils';
 
@@ -64,32 +65,7 @@ export default function Canvas() {
         setIsEditing({ ...isEditing, code: false });
     };
 
-    const handleIdeaChange = (ideaId: string, field: keyof Idea, value: string) => {
-        const updatedIdeas = ideas.map(idea =>
-            idea.ideaId === ideaId ? { ...idea, [field]: value } : idea
-        );
-        setIdeas(updatedIdeas);
-    };
 
-    const handleSaveIdea = (ideaId: string) => {
-        const idea = ideas.find(i => i.ideaId === ideaId);
-        if (idea) {
-            updateIdea(ideaId, { description: idea.description, timeComplexity: idea.timeComplexity, spaceComplexity: idea.spaceComplexity });
-        }
-    };
-
-    const handleAddIdea = () => {
-        const newIdea: Omit<Idea, 'ideaId'> = {
-            description: '',
-            timeComplexity: '',
-            spaceComplexity: ''
-        };
-        addIdea(newIdea);
-    };
-
-    const handleDeleteIdea = (ideaId: string) => {
-        deleteIdea(ideaId);
-    };
 
     return (
         <div className="flex gap-4 p-4 h-full w-full box-border overflow-hidden">
@@ -100,13 +76,13 @@ export default function Canvas() {
                     "border border-gray-200 dark:border-gray-700"
                 )}>
                     {/* Constraints Section */}
-                    <CanvasSection title="Constraints" placeholder="Enter constraints here..." icon={<i className="fas fa-list-check mr-2"></i>} />
+                    <CanvasSection sectionName="constraints" placeholder="Enter constraints here..." icon={<i className="fas fa-list-check mr-2"></i>} />
 
                     {/* Ideas Section */}
-                    <CanvasSection title="Ideas" placeholder="Enter ideas here..." icon={<i className="fas fa-lightbulb mr-2"></i>} />
+                    <IdeasSection title="Ideas" placeholder="Enter ideas here..." icon={<i className="fas fa-lightbulb mr-2"></i>} />
 
                     {/* Test Cases Section */}
-                    <CanvasSection title="Test Cases" placeholder="Enter test cases here..." icon={<i className="fas fa-vial mr-2"></i>} />
+                    <CanvasSection sectionName="testCases" placeholder="Enter test cases here..." icon={<i className="fas fa-vial mr-2"></i>} />
                 </div>
             </div>
 
