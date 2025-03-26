@@ -19,7 +19,7 @@ export default function Canvas() {
     const [, setTestCases] = useState('');
     const [, setCode] = useState('');
     const [, setIdeas] = useState<Idea[]>([]);
-    
+
 
     // Initialize state when canvas data loads
     useEffect(() => {
@@ -40,8 +40,8 @@ export default function Canvas() {
     }
 
     return (
-        <div className="flex gap-4 p-4 h-full w-full box-border overflow-hidden">
-            <div className="w-[350px] min-w-[300px] flex-shrink-0 h-full">
+        <div className="flex flex-col lg:flex-row gap-4 p-4 h-[calc(100vh-3.5rem)] w-full box-border overflow-hidden">
+            <div className="w-full lg:w-[350px] lg:min-w-[300px] lg:flex-shrink-0 h-[40vh] lg:h-full">
                 <div className={cn(
                     "rounded-xl shadow-md transition-all duration-300 ease-in-out h-full overflow-hidden hover:shadow-lg flex flex-col",
                     "bg-white dark:bg-[#1f2937]",
@@ -51,7 +51,7 @@ export default function Canvas() {
                     <CanvasSection sectionName="constraints" placeholder="Enter constraints here..." icon={<i className="fas fa-list-check mr-2"></i>} />
 
                     {/* Ideas Section */}
-                    <IdeasSection title="Ideas"  icon={<i className="fas fa-lightbulb mr-2"></i>} />
+                    <IdeasSection title="Ideas" icon={<i className="fas fa-lightbulb mr-2"></i>} />
 
                     {/* Test Cases Section */}
                     <CanvasSection sectionName="testCases" placeholder="Enter test cases here..." icon={<i className="fas fa-vial mr-2"></i>} />
@@ -59,7 +59,7 @@ export default function Canvas() {
             </div>
 
             {/* Main Code Editor */}
-            <div className="flex-1 h-full w-full overflow-hidden">
+            <div className="flex-1 h-[60vh] lg:h-full w-full overflow-hidden">
                 <CodeEditor />
             </div>
         </div>
