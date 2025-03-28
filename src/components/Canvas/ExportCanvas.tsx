@@ -147,6 +147,7 @@ export function ExportCanvas() {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
+
     const handleExport = async () => {
         const selectedRows = table.getSelectedRowModel().rows;
         if (selectedRows.length === 0) {

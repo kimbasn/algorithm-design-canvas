@@ -23,8 +23,6 @@ interface CanvasContextProps {
 
 const CanvasContext = createContext<CanvasContextProps | undefined>(undefined)
 
-
-
 export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ children }): React.ReactElement => {
     const [canvases, setCanvases] = useState<Canvas[]>([])
     const [currentCanvas, setCurrentCanvas] = useState<Canvas | null>(null)

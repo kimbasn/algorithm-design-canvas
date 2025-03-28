@@ -45,7 +45,7 @@ if (rootElement && !rootElement.innerHTML) {
       </StrictMode>,
     )
   })
-    .catch((error: StorageInitializationError) => { 
+    .catch((error: StorageInitializationError) => {
       console.error('Failed to initialize storage:', error)
       root.render(
         <StrictMode>

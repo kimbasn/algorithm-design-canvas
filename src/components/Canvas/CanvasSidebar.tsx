@@ -207,14 +207,14 @@ export default function CanvasSidebar() {
                                         </TooltipContent>
                                     </Tooltip>
                                 ) : (
-                                        <div className="flex-1 min-w-0">
-                                            <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                                                {canvas.problemName}
-                                            </div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                Updated {new Date(canvas.updatedAt).toLocaleDateString()}
-                                            </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                                            {canvas.problemName}
                                         </div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                            Updated {new Date(canvas.updatedAt).toLocaleDateString()}
+                                        </div>
+                                    </div>
                                 )}
 
                                 <SidebarMenuAction>
@@ -223,17 +223,38 @@ export default function CanvasSidebar() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-[#1f2937]/50"
+                                                className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-[#1f2937]/50 touch-manipulation"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                }}
                                             >
                                                 <MoreHorizontal className="h-4 w-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => handleEditClick(canvas)}>
+                                        <DropdownMenuContent
+                                            align="end"
+                                            className="touch-manipulation"
+                                            onPointerDownOutside={(e) => {
+                                                e.preventDefault();
+                                            }}
+                                        >
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEditClick(canvas);
+                                                }}
+                                                className="touch-manipulation"
+                                            >
                                                 <Edit className="mr-2 h-4 w-4" />
                                                 Edit
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleDeleteClick(canvas)}>
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteClick(canvas);
+                                                }}
+                                                className="touch-manipulation"
+                                            >
                                                 <DeleteIcon className="mr-2 h-4 w-4" />
                                                 Delete
                                             </DropdownMenuItem>

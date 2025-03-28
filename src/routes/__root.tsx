@@ -10,22 +10,25 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { ThemeProvider, useTheme } from '@/components/theme-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/sonner'
+import { SettingsProvider } from '@/context/SettingsContext'
 
 export const Route = createRootRoute({
   component: () => (
-    <ThemeProvider defaultTheme='system' storageKey='vite-ui-theme'>
-      <CanvasProvider>
-        <SidebarProvider>
-          <TooltipProvider>
-            <Root />
-            {/* <TanStackRouterDevtools /> */}
-            <Toaster />
-            <Analytics />
-            <SpeedInsights />
-          </TooltipProvider>
-        </SidebarProvider>
-      </CanvasProvider>
-    </ThemeProvider>
+    <SettingsProvider>
+      <ThemeProvider defaultTheme='system' storageKey='vite-ui-theme'>
+        <CanvasProvider>
+          <SidebarProvider>
+            <TooltipProvider>
+              <Root />
+              {/* <TanStackRouterDevtools /> */}
+              <Toaster />
+              <Analytics />
+              <SpeedInsights />
+            </TooltipProvider>
+          </SidebarProvider>
+        </CanvasProvider>
+      </ThemeProvider>
+    </SettingsProvider>
   ),
 })
 
