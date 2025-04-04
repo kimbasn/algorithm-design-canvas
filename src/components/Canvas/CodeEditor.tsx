@@ -1,17 +1,15 @@
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import Editor from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
 import { useCanvasContext } from "@/context/CanvasContext";
-import CanvasSectionHeader from "./CanvasSectionHeader";
 
 
 export default function CodeEditor() {
     const { currentCanvas, updateCanvas } = useCanvasContext();
-    const [isExpanded, setIsExpanded] = useState(true);
     const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
     const { theme } = useTheme();
 
