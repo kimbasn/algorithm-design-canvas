@@ -4,6 +4,8 @@ import { ExportCanvas } from './ExportCanvas'
 import { ImportCanvas } from '@/components/Canvas/ImportCanvas';
 import { ModeToggle } from '../mode-toggle';
 
+import Timer from './Timer';
+
 const Header = () => {
   const { currentCanvas } = useCanvasContext()
 
@@ -20,7 +22,10 @@ const Header = () => {
           {currentCanvas?.problemName}
         </a>
       </div>
-      <ModeToggle />
+      <div className="flex items-center space-x-2">
+        <ModeToggle />
+        <Timer />
+      </div>
       <div className="flex items-center space-x-2">
         <ImportCanvas />
         <ExportCanvas />
