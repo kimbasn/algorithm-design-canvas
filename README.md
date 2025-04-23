@@ -6,7 +6,7 @@
 
 A modern, open-source platform that transforms algorithm design from a mental process into a structured, visual workspace. Built on the principles from [hiredintech's Algorithm Design Canvas](https://www.hiredintech.com/algorithms/algorithm-design-canvas/what-is-the-canvas/), this tool helps developers, students, and interviewees better plan, document, and share their algorithmic solutions.
 
-[Live Demo](https://algorithm-design-canvas.netlify.app/) · [Report Bug](https://github.com/kimbasn/algorithm-design-canvas/issues) · [Request Feature](https://github.com/kimbasn/algorithm-design-canvas/issues)
+[Live App](https://algorithm-design-canvas.netlify.app/) · [Report Bug](https://github.com/kimbasn/algorithm-design-canvas/issues) · [Request Feature](https://github.com/kimbasn/algorithm-design-canvas/issues)
 
 </div>
 
